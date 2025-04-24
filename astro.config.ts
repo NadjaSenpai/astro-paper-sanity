@@ -16,12 +16,13 @@ export default defineConfig({
     assetsInclude: ["**/*.ttf"],
     optimizeDeps: {
       exclude: ["@resvg/resvg-js"],
+    },
     ssr: {
       noExternal: [
         "@resvg/resvg-js",
         "@sanity/clientConfig",
       ],
-      external: ["@resvg/resvg-js"]
+      external: ["@resvg/resvg-js"],
     },
     plugins: [
       {
@@ -44,6 +45,6 @@ export default defineConfig({
     },
     build: {
       chunkSizeWarningLimit: 1024,
-    }
+    },
   },
 });
