@@ -1,7 +1,10 @@
-export const sanityConfig = {
-    projectId: import.meta.env.SANITY_PROJECT_ID!,
-    dataset: import.meta.env.SANITY_DATASET!,
-    apiVersion: import.meta.env.SANITY_API_VERSION || "2025-04-19",
-    useCdn: import.meta.env.SANITY_USE_CDN === "true",
-    token: import.meta.env.SANITY_API_TOKEN,
-  };
+// ✅ CommonJS 環境のみ対象に dotenv を読み込むように分離
+if (typeof process !== "undefined" && typeof process.cwd === "function") {
+  await import("dotenv").then(dotenv => dotenv.config());
+}
+
+export const projectId = process.env.SANITY_PROJECT_ID!;
+export const dataset = process.env.SANITY_DATASET!;
+export const apiVersion = process.env.SANITY_API_VERSION || "2025-04-24";
+export const useCdn = process.env.SANITY_USE_CDN === "true";
+export const token = process.env.SANITY_API_READ_TOKEN;

@@ -17,32 +17,52 @@ This is a customized blog project built with [Astro](https://astro.build) and [S
 - 🖌️ Icons from **Tabler Icons**
 - 💻 Syntax highlighting with **react-syntax-highlighter** and **Prism**
 
+## Hosting Strategy
+
+- 🔸 **Astro frontend** and **Sanity Studio** are hosted **separately** on Vercel
+- 🔸 Astro pulls data from a **dedicated Sanity project**
+- 🔸 Studio is **restricted** from indexing (via `robots.txt`) or can be password protected if needed
+- 🔸 Deploy hooks and webhooks allow **on-demand rebuilds**
+
 ## Getting Started
 
-Clone the repository:
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/NadjaSenpai/astro-paper-sanity.git
 cd astro-paper-sanity
 ```
 
-Install dependencies:
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-Set up environment variables in `.env`:
+### 3. Create `sanity/env.ts` and `studio/env.ts`
 
-```env
-SANITY_PROJECT_ID=your_project_id
-SANITY_DATASET=production
-SANITY_API_READ_TOKEN=your_read_token
+These files should define the required `projectId`, `dataset`, etc. Since `import.meta.env` is only available in Node/Vite environments, we fallback to custom `env.ts` files like this:
+
+```ts
+// sanity/env.ts
+export const projectId = "your_project_id";
+export const dataset = "production";
+export const apiVersion = "2025-04-24";
+export const useCdn = true;
+export const token = "your_read_token";
 ```
 
-Start development server:
+**Important:**  
+These files are `.gitignore`-d and **must be created manually** in both `sanity/` and `studio/` folders.
+
+### 4. Start development
 
 ```bash
+# For Astro (frontend)
+npm run dev
+
+# For Studio (inside /studio directory)
+cd studio
 npm run dev
 ```
 
@@ -57,10 +77,12 @@ npm run dev
 
 ## Acknowledgements
 
-- Original theme: [satnaing/astro-paper](https://github.com/satnaing/astro-paper)
+- Theme base: [satnaing/astro-paper](https://github.com/satnaing/astro-paper)
 - OG image generation: [satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/yisibl/resvg-js)
 - Static search: [Pagefind](https://pagefind.app)
 - Icons: [Tabler Icons](https://tabler-icons.io)
 - Syntax Highlighting: [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter)
 
-- **Built with help from [ChatGPT 4o](https://openai.com/chatgpt)** ❤️
+---
+
+🚀 Built with help from [ChatGPT 4o](https://openai.com/chatgpt)

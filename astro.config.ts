@@ -4,7 +4,7 @@ import sitemap from "@astrojs/sitemap";
 import path from "path";
 
 export default defineConfig({
-  site: "https://astro-paper-sanity.vercel.app",
+  site: "http://localhost:4321",
   integrations: [react(), sitemap()],
   vite: {
     resolve: {
@@ -15,14 +15,14 @@ export default defineConfig({
     },
     assetsInclude: ["**/*.ttf"],
     optimizeDeps: {
-      exclude: ["@resvg/resvg-js"],
+      exclude: ["@resvg/resvg-js"], // ← resvg はプリバンドルさせない
     },
     ssr: {
       noExternal: [
-        "@resvg/resvg-js",
+        "@resvg/resvg-js",        // ← resvg のネイティブモジュールを除外
         "@sanity/clientConfig",
       ],
-      external: ["@resvg/resvg-js"],
+      external: ["@resvg/resvg-js"]
     },
     plugins: [
       {
@@ -34,7 +34,7 @@ export default defineConfig({
         },
         load(id) {
           if (id.endsWith(".node")) {
-            return `export default ${JSON.stringify(id)};`;
+            return `export default ${JSON.stringify(id)};`; // 文字列として読み込ませる
           }
           return null;
         },
@@ -44,7 +44,7 @@ export default defineConfig({
       postcss: "./postcss.config.cjs",
     },
     build: {
-      chunkSizeWarningLimit: 1024,
-    },
+      chunkSizeWarningLimit: 1024, // 単位 KB。例: 1MBまで許容
+    }
   },
 });
