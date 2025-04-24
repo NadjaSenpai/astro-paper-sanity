@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /studio
+Allow: /
+
