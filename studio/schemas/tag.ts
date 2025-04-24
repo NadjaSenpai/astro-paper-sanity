@@ -23,10 +23,16 @@ export default {
       },
       validation: (Rule: RuleType) =>
         Rule.required().custom((value) => {
-          const slug = typeof value === "string" ? value : (value as { current?: string })?.current;
+          const slug =
+            typeof value === "string"
+              ? value
+              : (value as { current?: string })?.current;
           if (!slug) return true;
           const regex = /^[a-z0-9\-]+$/;
-          return regex.test(slug) || "スラッグは小文字の英数字とハイフンのみ使用できます";
+          return (
+            regex.test(slug) ||
+            "スラッグは小文字の英数字とハイフンのみ使用できます"
+          );
         }),
     },
   ],

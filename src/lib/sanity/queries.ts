@@ -9,7 +9,8 @@ export const settingsQuery = `
     github,
     ogImage,
     message,
-    content
+    content,
+    website,
   }
 `;
 

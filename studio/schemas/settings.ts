@@ -9,7 +9,7 @@ export default defineType({
       name: "title",
       title: "Site Title",
       type: "string",
-      validation: Rule => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "description",
@@ -38,9 +38,9 @@ export default defineType({
       name: "email",
       title: "Email",
       type: "string",
-      validation: Rule =>
+      validation: (Rule) =>
         Rule.regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "email").error(
-          "有効なメールアドレスを入力してください"
+          "有効なメールアドレスを入力してください",
         ),
     }),
     defineField({

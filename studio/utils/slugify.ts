@@ -15,5 +15,3 @@ export default function slugify(input: string): string {
     .replace(/^-+/, "")
     .replace(/-+$/, "");
 }
-
-

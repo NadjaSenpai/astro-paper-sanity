@@ -1,9 +1,5 @@
 // studio/schemas/post.ts
-import {
-  defineType,
-  defineField,
-  defineArrayMember
-} from "sanity";
+import { defineType, defineField, defineArrayMember } from "sanity";
 import slugify from "../utils/slugify";
 
 export default defineType({
