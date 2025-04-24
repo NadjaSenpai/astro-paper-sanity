@@ -2,6 +2,9 @@
 
 # Dependencies
 /node_modules
+/studio/node_modules
+/studio/.sanity
+/.astro
 /.pnp
 .pnp.js
 package-lock.json
@@ -36,4 +39,3 @@ package-lock.json
 
 # Deployment
 /.vercel
-vercel.json

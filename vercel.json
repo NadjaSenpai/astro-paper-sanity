@@ -1,0 +1,12 @@
+{
+  "framework": "astro",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "ignoreCommand": "echo 'skip studio'",
+  "routes": [
+    {
+      "src": "/robots.txt",
+      "dest": "/robots.txt"
+    }
+  ]
+}

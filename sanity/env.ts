@@ -1,8 +1,3 @@
-// ✅ CommonJS 環境のみ対象に dotenv を読み込むように分離
-if (typeof process !== "undefined" && typeof process.cwd === "function") {
-  await import("dotenv").then(dotenv => dotenv.config());
-}
-
 export const projectId = process.env.SANITY_PROJECT_ID!;
 export const dataset = process.env.SANITY_DATASET!;
 export const apiVersion = process.env.SANITY_API_VERSION || "2025-04-24";
