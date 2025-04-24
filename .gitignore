@@ -31,3 +31,7 @@
 *.env
 *.env.ts
 *.env.d.ts
+
+# Deployment
+/.vercel
+vercel.json
