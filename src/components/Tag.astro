@@ -2,12 +2,19 @@
 import IconHash from "@/assets/icons/IconHash.svg";
 
 export interface Props {
-  tag: string;
+  tag: string | { current: string };
   tagName: string;
   size?: "sm" | "lg";
 }
 
-const { tag, tagName, size = "sm" } = Astro.props;
+const rawTag = Astro.props.tag;
+const tag = rawTag && typeof rawTag === "object" && "current" in rawTag
+  ? rawTag.current
+  : typeof rawTag === "string"
+    ? rawTag
+    : "";
+
+const { tagName, size = "sm" } = Astro.props;
 ---
 
 <li
@@ -18,19 +25,14 @@ const { tag, tagName, size = "sm" } = Astro.props;
 >
   <a
     href={`/tags/${tag}/`}
-    transition:name={tag}
+    transition:name=`${tag}`
     class:list={[
-      "relative pr-2 text-lg underline decoration-dashed group-hover:-top-0.5 group-hover:text-accent focus-visible:p-1",
+      "inline-block text-lg underline decoration-dashed group-hover:-top-0.5 group-hover:text-accent focus-visible:p-1",
       { "text-sm": size === "sm" },
     ]}
   >
-    <IconHash
-      class:list={[
-        "inline-block opacity-80",
-        { "-mr-3.5 size-4": size === "sm" },
-        { "-mr-5 size-6": size === "lg" },
-      ]}
-    />
-    &nbsp;<span>{tagName}</span>
+    <span class="opacity-80">#</span>{tagName}
   </a>
 </li>
+
+

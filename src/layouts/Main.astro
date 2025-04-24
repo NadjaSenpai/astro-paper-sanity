@@ -1,6 +1,8 @@
 ---
 import Breadcrumb from "@/components/Breadcrumb.astro";
-import { SITE } from "@/config";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+
+const site = await getSiteConfig();
 
 interface StringTitleProp {
   pageTitle: string;
@@ -17,9 +19,8 @@ export type Props = StringTitleProp | ArrayTitleProp;
 
 const { props } = Astro;
 
-const backUrl = SITE.showBackButton ? Astro.url.pathname : "/";
+const backUrl = site.showBackButton ? Astro.url.pathname : "/";
 ---
-
 <Breadcrumb />
 <main
   data-backUrl={backUrl}

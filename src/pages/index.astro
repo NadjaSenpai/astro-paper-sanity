@@ -1,5 +1,5 @@
 ---
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/sanity";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
@@ -7,98 +7,77 @@ import Socials from "@/components/Socials.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
 import Hr from "@/components/Hr.astro";
-import getSortedPosts from "@/utils/getSortedPosts";
 import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
-import { SITE } from "@/config";
-import { SOCIALS } from "@/constants";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+import { getSocialLinks } from "@/constants";
+import PortableTextRenderer from "@/components/PortableTextRenderer.tsx";
+import { cleansePortableText } from "@/lib/sanity/utils/helpers";
 
-const posts = await getCollection("blog");
+const site = await getSiteConfig();
+const SOCIALS = getSocialLinks(site);
 
-const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
-const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+// 投稿取得・pubDateが有効なものだけ抽出・Date型に変換
+const allPosts = (await getPosts())
+  .filter(post => {
+    const isValid = !!post?.pubDate && !isNaN(new Date(post.pubDate).getTime());
+    if (!isValid) {
+      console.warn("⚠️ Skipped post with invalid pubDate:", post?.title, post?.pubDate);
+    }
+    return isValid;
+  })
+  .map(post => ({
+    ...post,
+    pubDate: new Date(post.pubDate),
+    modDate: post.modDate ? new Date(post.modDate) : undefined,
+  }));
+
+const featuredPosts = allPosts.filter(post => post.featured);
+const recentPosts = allPosts.filter(post => !post.featured);
 ---
 
 <Layout>
   <Header />
   <main id="main-content" data-layout="index">
     <section id="hero" class="pt-8 pb-6">
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
-        Mingalaba
-      </h1>
-      <a
-        target="_blank"
-        href="/rss.xml"
-        class="inline-block"
-        aria-label="rss feed"
-        title="RSS Feed"
-      >
-        <IconRss
-          width={20}
-          height={20}
-          class="scale-125 stroke-accent stroke-3"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
+      <div>
+        <PortableTextRenderer client:load value={cleansePortableText(site.message)} />
+      </div>
 
-      <p>
-        AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro
-        blog theme. This theme follows best practices and provides accessibility
-        out of the box. Light and dark mode are supported by default. Moreover,
-        additional color schemes can also be configured.
-      </p>
-      <p class="mt-2">
-        Read the blog posts or check
-        <LinkButton
-          class="underline decoration-dashed underline-offset-4 hover:text-accent"
-          href="https://github.com/satnaing/astro-paper#readme"
-        >
-          README
-        </LinkButton> for more info.
-      </p>
-      {
-        // only display if at least one social link is enabled
-        SOCIALS.length > 0 && (
-          <div class="mt-4 flex flex-col sm:flex-row sm:items-center">
-            <div class="mr-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
-            <Socials />
-          </div>
-        )
-      }
+      {SOCIALS.length > 0 && (
+        <div class="mt-4 flex flex-col sm:flex-row sm:items-center">
+          <div class="mr-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
+          <Socials socials={SOCIALS} />
+        </div>
+      )}
     </section>
 
     <Hr />
 
-    {
-      featuredPosts.length > 0 && (
-        <>
-          <section id="featured" class="pt-12 pb-6">
-            <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
-            <ul>
-              {featuredPosts.map(data => (
-                <Card variant="h3" {...data} />
-              ))}
-            </ul>
-          </section>
-          {recentPosts.length > 0 && <Hr />}
-        </>
-      )
-    }
-
-    {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
-          <ul>
-            {recentPosts.map(
-              (data, index) =>
-                index < SITE.postPerIndex && <Card variant="h3" {...data} />
-            )}
+    {featuredPosts.length > 0 && (
+      <>
+        <section id="featured" class="pt-12 pb-6">
+          <h2 class="text-2xl font-semibold tracking-wide">Featured Posts</h2>
+          <ul class="space-y-6">
+            {featuredPosts.map((post) => (
+              <Card {...post} variant="h2" />
+            ))}
           </ul>
         </section>
-      )
-    }
+        <Hr />
+      </>
+    )}
+
+    {recentPosts.length > 0 && (
+      <section id="recent-posts" class="pt-12 pb-6">
+        <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
+        <ul class="space-y-6">
+          {recentPosts.slice(0, site.postPerIndex ?? 4).map((post) => (
+            <Card {...post} variant="h3" />
+          ))}
+        </ul>
+      </section>
+    )}
 
     <div class="my-8 text-center">
       <LinkButton href="/posts/">
@@ -112,8 +91,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 
 <script>
   document.addEventListener("astro:page-load", () => {
-    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
-      ?.dataset?.layout;
+    const indexLayout = (document.querySelector("#main-content"))?.dataset?.layout;
     if (indexLayout) {
       sessionStorage.setItem("backUrl", "/");
     }

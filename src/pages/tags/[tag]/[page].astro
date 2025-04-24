@@ -1,0 +1,70 @@
+---
+import { getPosts } from "@/lib/sanity";
+import Layout from "@/layouts/Layout.astro";
+import Card from "@/components/Card.astro";
+import Main from "@/layouts/Main.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Pagination from "@/components/Pagination.astro";
+import getSortedPosts from "@/utils/getSortedPosts";
+
+export async function getStaticPaths() {
+  const allPosts = await getPosts();
+
+  const tagMap = new Map();
+
+  for (const post of allPosts) {
+    if (!post?.tags) continue;
+    for (const tag of post.tags) {
+      const slug = typeof tag.slug === "object" ? tag.slug.current : tag.slug;
+      if (!slug) continue;
+      if (!tagMap.has(slug)) tagMap.set(slug, []);
+      tagMap.get(slug).push(post);
+    }
+  }
+
+  const paths = [];
+  for (const [slug, posts] of tagMap.entries()) {
+    const totalPages = Math.ceil(posts.length / 10);
+    for (let page = 1; page <= totalPages; page++) {
+      paths.push({ params: { tag: slug, page: page.toString() } });
+    }
+  }
+
+  return paths;
+}
+
+const { tag, page } = Astro.params;
+const currentPage = parseInt(page);
+const allPosts = await getPosts();
+
+const filtered = allPosts.filter(post =>
+  post.tags?.some(t =>
+    (typeof t.slug === "object" ? t.slug.current : t.slug) === tag
+  )
+);
+
+const totalPages = Math.ceil(filtered.length / 10);
+const start = (currentPage - 1) * 10;
+const end = start + 10;
+const posts = filtered.slice(start, end);
+---
+
+<Layout title={`Tag: ${tag}`}>
+<Header />
+  <Main>
+  <ul>
+    {posts.map(post => (
+      <Card
+        title={post.title}
+        slug={post.slug}
+        pubDate={post.pubDate}
+        description={post.description}
+        modDate={post.modDate}
+        tags={post.tags}
+      />
+    ))}
+  </ul>
+  </Main>
+<Footer />
+</Layout>

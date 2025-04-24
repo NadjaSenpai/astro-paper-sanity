@@ -1,12 +1,20 @@
 ---
 import type { Page } from "astro";
-import type { CollectionEntry } from "astro:content";
 import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import LinkButton from "./LinkButton.astro";
 
 export interface Props {
-  page: Page<CollectionEntry<"blog">>;
+  page: {
+    data: any[]; // もしくは Post[]（型定義済みなら）
+    currentPage: number;
+    lastPage: number;
+    url: {
+      current: string;
+      next?: string;
+      prev?: string;
+    };
+  };
 }
 
 const { page } = Astro.props;

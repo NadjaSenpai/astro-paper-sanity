@@ -1,23 +1,23 @@
 ---
-import { getCollection } from "astro:content";
+import { getTags } from "@/lib/sanity";
 import Main from "@/layouts/Main.astro";
 import Layout from "@/layouts/Layout.astro";
 import Tag from "@/components/Tag.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import getUniqueTags from "@/utils/getUniqueTags";
-import { SITE } from "@/config";
+import { getSiteConfig } from "@/lib/getSiteConfig";
 
-const posts = await getCollection("blog");
-
-let tags = getUniqueTags(posts);
+const tags = await getTags();
+const site = await getSiteConfig();
 ---
 
-<Layout title={`Tags | ${SITE.title}`}>
+<Layout title={`Tags | ${site.title}`}>
   <Header />
   <Main pageTitle="Tags" pageDesc="All the tags used in posts.">
-    <ul>
-      {tags.map(({ tag, tagName }) => <Tag {tag} {tagName} size="lg" />)}
+    <ul class="flex flex-wrap gap-2">
+      {tags.map(({ slug, title }) => (
+        <Tag tag={slug} tagName={title} size="lg" />
+      ))}
     </ul>
   </Main>
   <Footer />

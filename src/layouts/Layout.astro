@@ -1,7 +1,9 @@
 ---
 import { ClientRouter } from "astro:transitions";
-import { SITE } from "@/config";
+import { getSiteConfig } from "@/lib/getSiteConfig";
 import "@/styles/global.css";
+
+const site = await getSiteConfig();
 
 const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
 
@@ -12,36 +14,39 @@ export interface Props {
   description?: string;
   ogImage?: string;
   canonicalURL?: string;
-  pubDatetime?: Date;
-  modDatetime?: Date | null;
+  pubDate?: string | Date;
+  modDate?: string | Date | null;
   scrollSmooth?: boolean;
 }
 
 const {
-  title = SITE.title,
-  author = SITE.author,
-  profile = SITE.profile,
-  description = SITE.desc,
-  ogImage = SITE.ogImage ? `/${SITE.ogImage}` : "/og.png",
-  canonicalURL = new URL(Astro.url.pathname, Astro.url),
-  pubDatetime,
-  modDatetime,
+  title = site.title,
+  author = site.author,
+  profile = site.profile,
+  description = site.description,
+  ogImage = site.ogImage ? `/${site.ogImage}` : "/og.png",
+  canonicalURL = new URL(Astro.url.pathname, site.website?? "https://example.com"),
+  pubDate,
+  modDate,
   scrollSmooth = false,
 } = Astro.props;
 
-const socialImageURL = new URL(ogImage, Astro.url);
+const parsedPubDate = pubDate ? new Date(pubDate) : null;
+const parsedModDate = modDate ? new Date(modDate) : null;
+
+const socialImageURL = new URL(ogImage, site.website);
 
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  headline: `${title}`,
-  image: `${socialImageURL}`,
-  datePublished: `${pubDatetime?.toISOString()}`,
-  ...(modDatetime && { dateModified: modDatetime.toISOString() }),
+  headline: title,
+  image: socialImageURL.toString(),
+  ...(parsedPubDate && { datePublished: parsedPubDate.toISOString() }),
+  ...(parsedModDate && { dateModified: parsedModDate.toISOString() }),
   author: [
     {
       "@type": "Person",
-      name: `${author}`,
+      name: author,
       ...(profile && { url: profile }),
     },
   ],
@@ -49,12 +54,13 @@ const structuredData = {
 ---
 
 <!doctype html>
-<html lang=`${SITE.lang ?? "en"}` class={`${scrollSmooth && "scroll-smooth"}`}>
+<html lang={site.lang ?? "en"} class={scrollSmooth ? "scroll-smooth" : ""} data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={canonicalURL} />
+    <link rel="canonical" href={canonicalURL.toString()} />
+
     <meta name="generator" content={Astro.generator} />
 
     <!-- General Meta Tags -->
@@ -64,69 +70,52 @@ const structuredData = {
     <meta name="author" content={author} />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
+    <link rel="preload" as="font" href="/fonts/Satoshi-Variable.woff2" type="font/woff2" crossorigin />
+
+    <!-- Noto Sans JP (Japanese) from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonicalURL} />
-    <meta property="og:image" content={socialImageURL} />
-
-    <!-- Article Published/Modified time -->
-    {
-      pubDatetime && (
-        <meta
-          property="article:published_time"
-          content={pubDatetime.toISOString()}
-        />
-      )
-    }
-    {
-      modDatetime && (
-        <meta
-          property="article:modified_time"
-          content={modDatetime.toISOString()}
-        />
-      )
-    }
+    <meta property="og:url" content={canonicalURL.toString()} />
+    <meta property="og:image" content={socialImageURL.toString()} />
+    {parsedPubDate && (
+      <meta property="article:published_time" content={parsedPubDate.toISOString()} />
+    )}
+    {parsedModDate && (
+      <meta property="article:modified_time" content={parsedModDate.toISOString()} />
+    )}
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:url" content={canonicalURL.toString()} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
-    <meta property="twitter:image" content={socialImageURL} />
+    <meta property="twitter:image" content={socialImageURL.toString()} />
 
-    <!-- Google JSON-LD Structured data -->
+    <!-- JSON-LD Structured Data -->
     <script
       type="application/ld+json"
       is:inline
       set:html={JSON.stringify(structuredData)}
     />
 
-    <!-- Enable RSS feed auto-discovery  -->
-    <!-- https://docs.astro.build/en/recipes/rss/#enabling-rss-feed-auto-discovery -->
     <link
       rel="alternate"
       type="application/rss+xml"
-      title={SITE.title}
-      href={new URL("rss.xml", Astro.site)}
+      title={site.title}
+      href={new URL("rss.xml", site.website).toString()}
     />
 
-    <meta name="theme-color" content="" />
-
-    {
-      // If PUBLIC_GOOGLE_SITE_VERIFICATION is set in the environment variable,
-      // include google-site-verification tag in the heading
-      // Learn more: https://support.google.com/webmasters/answer/9008080#meta_tag_verification&zippy=%2Chtml-tag
-      googleSiteVerification && (
-        <meta
-          name="google-site-verification"
-          content={googleSiteVerification}
-        />
-      )
-    }
+    {googleSiteVerification && (
+      <meta name="google-site-verification" content={googleSiteVerification} />
+    )}
 
     <ClientRouter />
-
+    
     <script is:inline src="/toggle-theme.js"></script>
   </head>
   <body>
@@ -135,8 +124,7 @@ const structuredData = {
 </html>
 
 <style>
-  html,
-  body {
+  html, body {
     margin: 0;
     width: 100%;
     height: 100%;

@@ -1,0 +1,37 @@
+---
+import PostDetails from "@/layouts/PostDetails.astro";
+import Layout from "@/layouts/Layout.astro";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+import { getPostBySlug, getPosts } from "@/lib/sanity";
+import getSortedPosts from "@/utils/getSortedPosts";
+import type { Post } from "@/lib/sanity/api/types/post";
+
+export async function getStaticPaths() {
+  const posts: Post[] = await getPosts();
+  return posts
+    .filter((post: Post) => post.slug?.current)
+    .map((post: Post) => ({
+      params: { slug: post.slug.current },
+    }));
+}
+
+const { slug } = Astro.params;
+const post: Post | null = await getPostBySlug(slug);
+const posts: Post[] = await getPosts();
+const sortedPosts = getSortedPosts(posts);
+const site = await getSiteConfig();
+
+if (!post) {
+  throw new Error(`❌ 投稿が見つかりませんでした: ${slug}`);
+}
+---
+
+<Layout
+  title={`${post.title} | ${site.title}`}
+  description={post.description}
+  pubDate={post.pubDate}
+  modDate={post.modDate}
+  ogImage={`/og/${post.slug.current}.png`}
+>
+  <PostDetails post={post} posts={sortedPosts} />
+</Layout>

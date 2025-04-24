@@ -1,5 +1,10 @@
-import kebabcase from "lodash.kebabcase";
-
-export const slugifyStr = (str: string) => kebabcase(str);
-
-export const slugifyAll = (arr: string[]) => arr.map(str => slugifyStr(str));
+export default function slugify(str?: string): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}

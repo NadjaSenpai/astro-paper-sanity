@@ -3,7 +3,6 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import IconCalendar from "@/assets/icons/IconCalendar.svg";
-import { SITE } from "@/config";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -11,26 +10,39 @@ dayjs.extend(timezone);
 export interface Props {
   class?: string;
   size?: "sm" | "lg";
-  timezone: string | undefined;
-  pubDatetime: string | Date;
-  modDatetime: string | Date | undefined | null;
+  timezone?: string; // ← 必須ではないが、明示的に渡せるように
+  pubDate: string | Date;
+  modDate?: string | Date | null;
 }
 
 const {
-  pubDatetime,
-  modDatetime,
+  pubDate,
+  modDate,
   size = "sm",
   class: className = "",
-  timezone: postTimezone,
+  timezone: tz = "Asia/Tokyo", // ← siteなしでデフォルトを明示
 } = Astro.props;
 
-/* ========== Formatted Datetime ========== */
-const latestDatetime =
-  modDatetime && modDatetime > pubDatetime ? modDatetime : pubDatetime;
-const datetime = dayjs(latestDatetime).tz(postTimezone || SITE.timezone);
+// 日付の妥当性を厳しくチェック
+const isValidDate = (d: unknown): d is Date =>
+  d instanceof Date && !isNaN(d.getTime());
 
-const date = datetime.format("D MMM, YYYY"); // e.g., '22 Mar, 2025'
-const time = datetime.format("hh:mm A"); // e.g., '08:30 PM'
+const pub = pubDate instanceof Date ? pubDate : new Date(pubDate);
+const mod = modDate
+  ? modDate instanceof Date
+    ? modDate
+    : new Date(modDate)
+  : null;
+
+if (!isValidDate(pub)) {
+  throw new Error("❌ pubDate が無効です: " + JSON.stringify(pubDate));
+}
+
+const datetime = mod && isValidDate(mod) && mod > pub ? mod : pub;
+const formatted = dayjs(datetime).tz(tz);
+
+const date = formatted.format("D MMM, YYYY");
+const time = formatted.format("hh:mm A");
 ---
 
 <div class:list={["flex items-end space-x-2 opacity-80", className]}>
@@ -41,7 +53,7 @@ const time = datetime.format("hh:mm A"); // e.g., '08:30 PM'
     ]}
   />
   {
-    modDatetime && modDatetime > pubDatetime ? (
+    mod && isValidDate(mod) && mod > pub ? (
       <span class:list={["text-sm italic", { "sm:text-base": size === "lg" }]}>
         Updated:
       </span>
@@ -50,7 +62,7 @@ const time = datetime.format("hh:mm A"); // e.g., '08:30 PM'
     )
   }
   <span class:list={["text-sm italic", { "sm:text-base": size === "lg" }]}>
-    <time datetime={datetime.toISOString()}>{date}</time>
+    <time datetime={formatted.toISOString()}>{date}</time>
     <span aria-hidden="true"> | </span>
     <span class="sr-only">&nbsp;at&nbsp;</span>
     <span class="text-nowrap">{time}</span>

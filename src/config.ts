@@ -1,22 +1,20 @@
-export const SITE = {
-  website: "https://astro-paper.pages.dev/", // replace this with your deployed domain
-  author: "Sat Naing",
-  profile: "https://satnaing.dev/",
-  desc: "A minimal, responsive and SEO-friendly Astro blog theme.",
-  title: "AstroPaper",
+export const defaultSiteConfig = {
+  website: "your_site_url",
+  author: "your_name",
+  profile: "https://your_site_url/",
+  email: "mail@example.com",
+  description: "your_description",
+  twitter: "https://twitter.com/your_twitter",
+  github: "https://github.com/your_github",
+  title: "your_site_title",
   ogImage: "astropaper-og.jpg",
   lightAndDarkMode: true,
-  postPerIndex: 4,
-  postPerPage: 4,
-  scheduledPostMargin: 15 * 60 * 1000, // 15 minutes
+  postPerIndex: 5,
+  postPerPage: 5,
+  scheduledPostMargin: 15 * 60 * 1000,
   showArchives: true,
-  showBackButton: true, // show back button in post detail
-  editPost: {
-    enabled: true,
-    text: "Suggest Changes",
-    url: "https://github.com/satnaing/astro-paper/edit/main/",
-  },
+  showBackButton: true,
   dynamicOgImage: true,
-  lang: "en", // html lang code. Set this empty and default will be "en"
-  timezone: "Asia/Bangkok", // Default global timezone (IANA format) https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  lang: "ja",
+  timezone: "Asia/Tokyo",
 } as const;

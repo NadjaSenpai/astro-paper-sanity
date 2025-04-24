@@ -1,0 +1,25 @@
+---
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Layout from "@/layouts/Layout.astro";
+import Main from "@/layouts/Main.astro";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+import { getPageBySlug } from "@/lib/sanity/";
+import PortableTextRenderer from "@/components/PortableTextRenderer.tsx";
+import { cleansePortableText } from "@/lib/sanity/utils/helpers";
+
+const site = await getSiteConfig();
+const page = await getPageBySlug("about");
+
+if (!page) {
+  throw new Error("Aboutページが見つかりませんでした");
+}
+---
+
+<Layout title={`About | ${site.title}`}>
+  <Header />
+    <Main pageTitle="About" pageDesc="">
+      <PortableTextRenderer client:load value={cleansePortableText(page.content)} />
+    </Main>
+  <Footer />
+</Layout>

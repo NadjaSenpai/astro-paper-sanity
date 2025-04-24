@@ -6,12 +6,14 @@ import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconArchive from "@/assets/icons/IconArchive.svg";
 import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
+import IconRss from "@/assets/icons/IconRss.svg";
 import LinkButton from "./LinkButton.astro";
-import { SITE } from "@/config";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+
+const site = await getSiteConfig()
 
 const { pathname } = Astro.url;
 
-// Remove trailing slash from current pathname if exists
 const currentPath =
   pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
 
@@ -42,8 +44,9 @@ const isActive = (path: string) => {
       <a
         href="/"
         class="absolute py-1 text-2xl leading-7 font-semibold whitespace-nowrap sm:static"
+        style="font-family: 'Satoshi', 'Noto Sans JP', sans-serif;"
       >
-        {SITE.title}
+        {site.title}
       </a>
       <nav
         id="nav-menu"
@@ -59,6 +62,7 @@ const isActive = (path: string) => {
           <IconX id="close-icon" class="hidden" />
           <IconMenuDeep id="menu-icon" />
         </button>
+
         <ul
           id="menu-items"
           class:list={[
@@ -84,7 +88,7 @@ const isActive = (path: string) => {
             </a>
           </li>
           {
-            SITE.showArchives && (
+            site.showArchives && (
               <li class="col-span-2">
                 <LinkButton
                   href="/archives"
@@ -118,7 +122,7 @@ const isActive = (path: string) => {
             </LinkButton>
           </li>
           {
-            SITE.lightAndDarkMode && (
+            site.lightAndDarkMode && (
               <li class="col-span-1 flex items-center justify-center">
                 <button
                   id="theme-btn"
@@ -162,7 +166,5 @@ const isActive = (path: string) => {
   }
 
   toggleNav();
-
-  // Runs on view transitions navigation
   document.addEventListener("astro:after-swap", toggleNav);
 </script>

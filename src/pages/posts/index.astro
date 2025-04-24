@@ -1,0 +1,22 @@
+---
+const isDev = import.meta.env.DEV;
+if (!isDev) {
+  Astro.redirect('/posts/1');
+}
+---
+
+<html lang="ja">
+  <head>
+    {!isDev && <meta http-equiv="refresh" content="0; url=/posts/1" />}
+    <meta name="robots" content="noindex" />
+    <title>リダイレクト中...</title>
+  </head>
+  <body>
+    <script>
+      location.replace("/posts/1");
+    </script>
+    <noscript>
+      <p>リダイレクトしています。<a href="/posts/1">こちらをクリック</a>してください。</p>
+    </noscript>
+  </body>
+</html>

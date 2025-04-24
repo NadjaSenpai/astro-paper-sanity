@@ -1,26 +1,53 @@
 ---
-import { slugifyStr } from "@/utils/slugify";
-import type { CollectionEntry } from "astro:content";
-import { getPath } from "@/utils/getPath";
+import slugify from "@/utils/slugify";
 import Datetime from "./Datetime.astro";
+import { getPath } from "@/utils/getPath";
 
-export interface Props extends CollectionEntry<"blog"> {
+export interface Props {
+  title: string;
+  description?: string;
+  pubDate: string | Date;
+  modDate?: string | Date;
+  timezone?: string;
+  slug: { current: string } | string;
+  tags?: { title: string; slug?: { current: string } }[];
   variant?: "h2" | "h3";
 }
 
-const { variant = "h2", data, id, filePath } = Astro.props;
+const {
+  title = "No Title",
+  description,
+  pubDate,
+  modDate,
+  timezone = "Asia/Tokyo",
+  slug,
+  tags = [],
+  variant = "h2",
+} = Astro.props;
 
-const { title, description, pubDatetime, modDatetime, timezone } = data;
+const safeSlug = typeof slug === "string" ? slug : slug?.current ?? title;
+const transitionName = slugify(safeSlug);
 
 const headerProps = {
-  style: { viewTransitionName: slugifyStr(title) },
+  "transition:name": transitionName,
   class: "text-lg font-medium decoration-dashed hover:underline",
 };
+
+const parsedPub = pubDate instanceof Date ? pubDate : new Date(pubDate);
+const parsedMod = modDate
+  ? (modDate instanceof Date ? modDate : new Date(modDate))
+  : undefined;
+
+const isValidDate = (d: any): d is Date => d instanceof Date && !isNaN(d.getTime());
+
+if (!isValidDate(parsedPub)) {
+  throw new Error(`❌ pubDate が不正です: ${JSON.stringify(pubDate)}`);
+}
 ---
 
 <li class="my-6">
   <a
-    href={getPath(id, filePath)}
+    href={`/posts/${safeSlug}`}
     class="inline-block text-lg font-medium text-accent decoration-dashed underline-offset-4 focus-visible:no-underline focus-visible:underline-offset-0"
   >
     {
@@ -31,6 +58,23 @@ const headerProps = {
       )
     }
   </a>
-  <Datetime {pubDatetime} {modDatetime} {timezone} />
-  <p>{description}</p>
+
+  <Datetime pubDate={parsedPub} modDate={parsedMod} timezone={timezone} />
+
+  {Array.isArray(tags) && tags.length > 0 && (
+    <ul class="mt-2 flex flex-wrap gap-2 text-sm text-muted-foreground">
+      {tags.map(tag => (
+        <li>
+          <a
+            href={`/tags/${slugify(tag.slug?.current ?? tag.title)}`}
+            class="underline underline-offset-4 decoration-dotted hover:text-accent"
+          >
+            #{tag.title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  {description && <p class="mt-2 text-base">{description}</p>}
 </li>

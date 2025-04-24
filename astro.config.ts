@@ -1,40 +1,50 @@
 import { defineConfig } from "astro/config";
-import tailwindcss from "@tailwindcss/vite";
+import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
-import remarkToc from "remark-toc";
-import remarkCollapse from "remark-collapse";
-import { SITE } from "./src/config";
+import path from "path";
 
-// https://astro.build/config
 export default defineConfig({
-  site: SITE.website,
-  integrations: [
-    sitemap({
-      filter: page => SITE.showArchives || !page.endsWith("/archives"),
-    }),
-  ],
-  markdown: {
-    remarkPlugins: [remarkToc, [remarkCollapse, { test: "Table of contents" }]],
-    shikiConfig: {
-      // For more themes, visit https://shiki.style/themes
-      themes: { light: "min-light", dark: "night-owl" },
-      wrap: true,
-    },
-  },
+  site: "http://localhost:4321",
+  integrations: [react(), sitemap()],
   vite: {
-    plugins: [tailwindcss()],
-    optimizeDeps: {
-      exclude: ["@resvg/resvg-js"],
+    resolve: {
+      alias: {
+        "@": path.resolve("./src"),
+        "@sanity/clientConfig": path.resolve("./sanity/clientConfig.ts"),
+      },
     },
-  },
-  image: {
-    // Used for all Markdown images; not configurable per-image
-    // Used for all `<Image />` and `<Picture />` components unless overridden with a prop
-    experimentalLayout: "responsive",
-  },
-  experimental: {
-    svg: true,
-    responsiveImages: true,
-    preserveScriptOrder: true,
+    assetsInclude: ["**/*.ttf"],
+    optimizeDeps: {
+      exclude: ["@resvg/resvg-js"], // ← resvg はプリバンドルさせない
+    },
+    ssr: {
+      noExternal: [
+        "@resvg/resvg-js",        // ← resvg のネイティブモジュールを除外
+        "@sanity/clientConfig",
+      ],
+      external: ["@resvg/resvg-js"]
+    },
+    plugins: [
+      {
+        name: "ignore-node-files",
+        enforce: "pre",
+        resolveId(source) {
+          if (source.endsWith(".node")) return source;
+          return null;
+        },
+        load(id) {
+          if (id.endsWith(".node")) {
+            return `export default ${JSON.stringify(id)};`; // 文字列として読み込ませる
+          }
+          return null;
+        },
+      },
+    ],
+    css: {
+      postcss: "./postcss.config.cjs",
+    },
+    build: {
+      chunkSizeWarningLimit: 1024, // 単位 KB。例: 1MBまで許容
+    }
   },
 });
