@@ -1,9 +1,11 @@
 import {defineCliConfig} from 'sanity/cli'
+import * as dotenv from "dotenv";
+dotenv.config(); // .env 読み込み
 
 export default defineCliConfig({
   api: {
-    projectId: '75eybrvo',
-    dataset: 'production'
+    projectId: process.env.SANITY_PROJECT_ID || "", // .env から取得
+    dataset: process.env.SANITY_DATASET || "production",
   },
   /**
    * Enable auto-updates for studios.

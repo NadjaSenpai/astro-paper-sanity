@@ -1,5 +1,8 @@
+import * as dotenv from "dotenv";
+dotenv.config();
+
 export const sanityConfig = {
-  projectId: "75eybrvo",
-  dataset: "production",
-  apiVersion: "2023-01-01",
+  projectId: process.env.SANITY_PROJECT_ID || "", // .env から取得
+  dataset: process.env.SANITY_DATASET || "production",
+  apiVersion: "2025-04-24",
 };
