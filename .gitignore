@@ -32,7 +32,6 @@ package-lock.json
 *.env
 *.env.ts
 *.env.d.ts
-env.ts
 
 # Deployment
 /.vercel
