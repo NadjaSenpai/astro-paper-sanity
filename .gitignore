@@ -4,6 +4,7 @@
 /node_modules
 /.pnp
 .pnp.js
+package-lock.json
 
 # Compiled Sanity Studio
 /dist
@@ -31,6 +32,7 @@
 *.env
 *.env.ts
 *.env.d.ts
+env.ts
 
 # Deployment
 /.vercel
