@@ -18,8 +18,8 @@ if (!page) {
 
 <Layout title={`About | ${site.title}`}>
   <Header />
-    <Main pageTitle="About" pageDesc="">
-      <PortableTextRenderer client:load value={cleansePortableText(page.content)} />
-    </Main>
+  <Main pageTitle="About" pageDesc="">
+    <PortableTextRenderer client:load value={cleansePortableText(page.content)} headingLink={false} />
+  </Main>
   <Footer />
 </Layout>

@@ -41,7 +41,7 @@ const recentPosts = allPosts.filter(post => !post.featured);
   <main id="main-content" data-layout="index">
     <section id="hero" class="pt-8 pb-6">
       <div>
-        <PortableTextRenderer client:load value={cleansePortableText(site.message)} />
+        <PortableTextRenderer client:load value={cleansePortableText(site.message)} headingLink={false} />
       </div>
 
       {SOCIALS.length > 0 && (

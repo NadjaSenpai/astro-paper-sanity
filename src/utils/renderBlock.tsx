@@ -1,9 +1,8 @@
 import slugify from '@/utils/slugify';
 
-export function renderBlock({ children, value }: any) {
+export function renderBlock({ children, value, headingLink = false }: any) {
   if (isEmpty(children)) return null;
 
-  // generate an `id` from text to use for heading links
   const text = Array.isArray(children)
     ? children.map(c => (typeof c === 'string' ? c : '')).join('')
     : typeof children === 'string'
@@ -11,37 +10,30 @@ export function renderBlock({ children, value }: any) {
     : '';
   const id = slugify(text);
 
+  const renderHeading = (Tag: keyof JSX.IntrinsicElements, className: string) => (
+    <Tag id={headingLink ? id : undefined} className={`${className} ${headingLink ? 'group' : ''}`}>
+      {children}
+      {headingLink && (
+        <a
+          href={`#${id}`}
+          className="heading-link ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100"
+          aria-hidden="true"
+        >
+          #
+        </a>
+      )}
+    </Tag>
+  );
+
   switch (value.style) {
     case 'h1':
-      return (
-        <h1 id={id} className="text-4xl font-bold mb-4 group">
-          {children}
-          <a
-            href={`#${id}`}
-            className="heading-link ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100"
-            aria-hidden="true"
-          >
-            #
-          </a>
-        </h1>
-      );
+      return renderHeading('h1', 'text-4xl font-bold mb-4');
     case 'h2':
-      return (
-        <h2 id={id} className="text-3xl font-bold mb-3 group">
-          {children}
-          <a
-            href={`#${id}`}
-            className="heading-link ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100"
-            aria-hidden="true"
-          >
-            #
-          </a>
-        </h2>
-      );
+      return renderHeading('h2', 'text-3xl font-bold mb-3');
     case 'h3':
-      return <h3 className="text-2xl font-bold mb-2">{children}</h3>;
+      return renderHeading('h3', 'text-2xl font-bold mb-2');
     case 'h4':
-      return <h4 className="text-xl font-bold mb-1">{children}</h4>;
+      return renderHeading('h4', 'text-xl font-bold mb-1');
     case 'blockquote':
       return (
         <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4">
