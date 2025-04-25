@@ -8,6 +8,9 @@ const config: Config = {
       './public/**/*.html',
     ],
   },
+  corePlugins: {
+    preflight: false, // resetしないならfalse（グローバルCSSと競合対策）
+  },
   theme: {
     extend: {
       fontFamily: {
@@ -37,9 +40,6 @@ const config: Config = {
         },
       },
     },
-  },
-  corePlugins: {
-    preflight: false, // resetしないならfalse（グローバルCSSと競合対策）
   },
   experimental: {
     optimizeUniversalDefaults: true, // ✅ パフォーマンス改善
