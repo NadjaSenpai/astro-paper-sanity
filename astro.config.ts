@@ -45,7 +45,6 @@ export default defineConfig({
     },
     build: {
       chunkSizeWarningLimit: 1024, // 単位 KB。例: 1MBまで許容
-      inlineStylesheets: 'always',
     }
   },
 });

@@ -5,7 +5,7 @@ import schemas from "./schemas";
 import {
   projectId,
   dataset,
-} from "./env.ts";
+} from "./env";
 
 if (!projectId || !dataset) {
   throw new Error("❌ Sanity projectId or dataset is missing!");

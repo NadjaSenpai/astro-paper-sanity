@@ -1,15 +1,13 @@
-import type { Config } from 'tailwindcss';
-import typography from '@tailwindcss/typography';
+import type { Config } from 'tailwindcss'
+import typography from '@tailwindcss/typography'
 
 const config: Config = {
   content: {
-    files: [
-      './src/**/*.{astro,html,js,jsx,ts,tsx,css}',
-      './public/**/*.html',
-    ],
+    files: ['./src/**/*.{astro,html,js,jsx,ts,tsx,css}', './public/**/*.html'],
   },
+  // @ts-expect-error: corePlugins is a valid Tailwind option but not in types
   corePlugins: {
-    preflight: false, // resetしないならfalse（グローバルCSSと競合対策）
+    preflight: false, // ✅ ここに移動
   },
   theme: {
     extend: {
@@ -42,9 +40,9 @@ const config: Config = {
     },
   },
   experimental: {
-    optimizeUniversalDefaults: true, // ✅ パフォーマンス改善
+    optimizeUniversalDefaults: true,
   },
   plugins: [typography],
-};
+}
 
-export default config;
+export default config
