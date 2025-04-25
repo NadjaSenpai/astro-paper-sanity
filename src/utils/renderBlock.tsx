@@ -6,15 +6,15 @@ import React from "react";
 import type { JSX } from "react"; // ← これ追加！
 
 export function renderBlock({
-  children,
   value,
+  children,
   headingLink = true,
 }: {
-  children: React.ReactNode;
   value: PortableTextBlock;
+  children?: React.ReactNode; // ← ここを optional にする！
   headingLink?: boolean;
 }) {
-  if (isEmpty(children)) return null;
+  if (!children || isEmpty(children)) return null;
 
   const text = Array.isArray(children)
     ? children.map((c) => (typeof c === "string" ? c : "")).join("")
