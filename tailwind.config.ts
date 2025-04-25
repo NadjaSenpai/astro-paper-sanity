@@ -3,12 +3,15 @@ import typography from '@tailwindcss/typography';
 
 const config: Config = {
   content: {
-    files: ['./src/**/*.{astro,html,js,jsx,ts,tsx,css}'],
+    files: [
+      './src/**/*.{astro,html,js,jsx,ts,tsx,css}',
+      './public/**/*.html',
+    ],
   },
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Recursive', 'Manrope', 'Inter', 'Satoshi', 'Noto Sans JP', 'sans-serif'],
+        sans: ['Satoshi', 'Inter', 'Manrope', 'Recursive', 'Noto Sans JP', 'sans-serif'],
         mono: ['Recursive', 'ui-monospace', 'monospace'],
       },
       colors: {
@@ -34,6 +37,12 @@ const config: Config = {
         },
       },
     },
+  },
+  corePlugins: {
+    preflight: false, // resetしないならfalse（グローバルCSSと競合対策）
+  },
+  experimental: {
+    optimizeUniversalDefaults: true, // ✅ パフォーマンス改善
   },
   plugins: [typography],
 };
