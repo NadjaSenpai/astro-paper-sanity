@@ -3,10 +3,10 @@ import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Layout from "@/layouts/Layout.astro";
 import Main from "@/layouts/Main.astro";
-import { getSiteConfig } from "@/lib/getSiteConfig";
-import { getPageBySlug } from "@/lib/sanity/";
 import PortableTextRenderer from "@/components/PortableTextRenderer.tsx";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+import { getPageBySlug } from "@/lib/sanity/";
 
 const site = await getSiteConfig();
 const page = await getPageBySlug("about");
