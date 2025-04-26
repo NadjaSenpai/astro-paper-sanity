@@ -2,6 +2,7 @@
 import { PortableText } from "@portabletext/react";
 import { renderBlock } from "@/utils/renderBlock";
 import { renderMarks } from "@/utils/renderMarks";
+import CodeBlock from "@/components/CodeBlock"; // ← これ追加
 
 interface Props {
   value: any[];
@@ -13,7 +14,9 @@ export default function PortableTextRenderer({ value, headingLink = true }: Prop
     <PortableText
       value={value}
       components={{
-        types: {},
+        types: {
+          code: CodeBlock, // ← ここ追加！！
+        },
         marks: renderMarks,
         block: (props) => renderBlock({ ...props, headingLink }),
       }}
