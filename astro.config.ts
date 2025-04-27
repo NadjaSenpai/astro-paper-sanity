@@ -41,7 +41,7 @@ export default defineConfig({
       },
     ],
     css: {
-      postcss: "./postcss.config.cjs",
+    //  postcss: "./postcss.config.cjs",
     },
     build: {
       chunkSizeWarningLimit: 1024, // 単位 KB。例: 1MBまで許容
