@@ -2,19 +2,16 @@ import type { PortableTextBlock } from "@portabletext/types";
 import slugify from "@/utils/slugify";
 import React from "react";
 
-// JSX.IntrinsicElements のためにこれを import
-import type { JSX } from "react"; // ← これ追加！
-
 export function renderBlock({
   value,
   children,
   headingLink = true,
 }: {
   value: PortableTextBlock;
-  children?: React.ReactNode; // ← ここを optional にする！
+  children?: React.ReactNode;
   headingLink?: boolean;
 }) {
-  if (!children || isEmpty(children)) return null;
+  if (!children) return null;
 
   const text = Array.isArray(children)
     ? children.map((c) => (typeof c === "string" ? c : "")).join("")
@@ -23,14 +20,8 @@ export function renderBlock({
     : "";
   const id = slugify(text);
 
-  const renderHeading = (
-    Tag: keyof JSX.IntrinsicElements,
-    className: string
-  ) => (
-    <Tag
-      id={headingLink ? id : undefined}
-      className={`${className} ${headingLink ? "group" : ""}`}
-    >
+  const renderHeading = (Tag: keyof JSX.IntrinsicElements, className: string) => (
+    <Tag id={headingLink ? id : undefined} className={className}>
       {children}
       {headingLink && (
         <a
@@ -62,13 +53,4 @@ export function renderBlock({
     default:
       return <p className="mb-4">{children}</p>;
   }
-}
-
-function isEmpty(children: React.ReactNode) {
-  if (Array.isArray(children)) {
-    return children.every(
-      (c) => typeof c === "string" && (c.trim() === "" || c.trim() === "#")
-    );
-  }
-  return typeof children === "string" && (children.trim() === "" || children.trim() === "#");
 }

@@ -1,7 +1,8 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { codeInput } from "@sanity/code-input";
-import schemas from "./schemas";
+import { visionTool } from "@sanity/vision";
+import { schemaTypes } from "./schemas"; 
 import {
   projectId,
   dataset,
@@ -15,8 +16,8 @@ export default defineConfig({
   projectId,
   dataset,
   title: "My Blog",
-  plugins: [structureTool(), codeInput()],
+  plugins: [structureTool(), codeInput(), visionTool()],
   schema: {
-    types: schemas,
+    types: schemaTypes, 
   },
 });

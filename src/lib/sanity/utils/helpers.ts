@@ -2,11 +2,7 @@ import type { Page, Post } from "@/lib/sanity/api/types";
 import type { PortableTextBlock } from "@portabletext/types";
 
 export function cleansePortableText(value: PortableTextBlock[] = []) {
-  return value.filter(block =>
-    block._type === "block" ||
-    block._type === "image" ||
-    block._type === "code"
-  );
+  return value.filter(block => typeof block._type === "string");
 }
 
 export function normalizePage(page: any): Page {

@@ -1,4 +1,3 @@
-// studio/schemas/post.ts
 import { defineType, defineField, defineArrayMember } from "sanity";
 import slugify from "../utils/slugify";
 
@@ -7,121 +6,56 @@ export default defineType({
   type: "document",
   title: "Post",
   fields: [
-    defineField({
-      name: "title",
-      type: "string",
-      title: "Title",
-      validation: (Rule) => Rule.required(),
-    }),
-
-    defineField({
-      name: "slug",
-      type: "slug",
-      title: "Slug",
-      options: {
-        source: "title",
-        maxLength: 96,
-        slugify,
-      },
-      validation: (Rule) =>
-        Rule.required().custom((value) => {
-          const slug =
-            typeof value === "string"
-              ? value
-              : (value as { current?: string })?.current;
-          if (!slug) return true;
-          return /^[a-z0-9\-]+$/.test(slug)
-            ? true
-            : "スラッグは小文字の英数字とハイフンのみ使用できます";
-        }),
-    }),
-
-    defineField({
-      name: "tags",
-      type: "array",
-      title: "Tags",
-      of: [
-        defineArrayMember({
-          type: "reference",
-          to: [{ type: "tag" }],
-        }),
-      ],
-    }),
-
+    defineField({ name: "title", type: "string", title: "Title", validation: (Rule) => Rule.required() }),
+    defineField({ name: "slug", type: "slug", title: "Slug", options: { source: "title", maxLength: 96, slugify }, validation: (Rule) => Rule.required() }),
+    defineField({ name: "tags", type: "array", title: "Tags", of: [ defineArrayMember({ type: "reference", to: [{ type: "tag" }] }) ] }),
     defineField({
       name: "content",
       type: "array",
       title: "Content",
       of: [
         defineArrayMember({ type: "block" }),
-
         defineArrayMember({
           type: "image",
           fields: [
+            defineField({ name: "alt", type: "string", title: "Alternative text" }),
             defineField({
-              name: "alt",
+              name: "alignment",
               type: "string",
-              title: "Alternative text",
-              description:
-                "代替テキストは、画像の内容を視覚に頼らないユーザーにも伝えます。",
+              title: "Alignment",
+              options: { list: [ { title: "Left", value: "left" }, { title: "Center", value: "center" }, { title: "Right", value: "right" } ], layout: "radio" },
+            }),
+            defineField({
+              name: "width",
+              type: "number",
+              title: "Image Width (px)",
+              description: "オプション：ピクセル単位で幅を指定できます",
             }),
           ],
         }),
-
+        defineArrayMember({ type: "code", options: { withFilename: true } }),
         defineArrayMember({
-          type: "code",
-          title: "Code block",
-          options: {
-            withFilename: true,
-          },
+          type: "object",
+          name: "youtube",
+          title: "YouTube Embed",
+          fields: [
+            defineField({
+              name: "url",
+              type: "url",
+              title: "YouTube URL",
+              validation: (Rule) => Rule.uri({
+                scheme: ["https"],
+                allowRelative: false,
+              }),
+            }),
+          ],
         }),
       ],
     }),
-
-    defineField({
-      name: "description",
-      type: "text",
-      title: "Description",
-    }),
-
-    defineField({
-      name: "pubDate",
-      type: "datetime",
-      title: "Published at",
-      validation: (Rule) => Rule.required(),
-    }),
-
-    defineField({
-      name: "modDate",
-      type: "datetime",
-      title: "Modified at",
-    }),
-
-    defineField({
-      name: "featured",
-      type: "boolean",
-      title: "Featured",
-      validation: (Rule) =>
-        Rule.custom((featured, context) => {
-          const parent = context.parent as any;
-          return featured && parent?.archived
-            ? "Featured と Archived を同時に true にできません"
-            : true;
-        }),
-    }),
-
-    defineField({
-      name: "archived",
-      type: "boolean",
-      title: "Archived",
-      initialValue: false,
-      validation: (Rule) =>
-        Rule.custom((featured, context) => {
-          const parent = context.parent as any;
-          return featured && parent?.archived
-            ? "Featured と Archived を同時に true にできません"
-            : true;
-        }),
-    }),
+    defineField({ name: "description", type: "text", title: "Description" }),
+    defineField({ name: "pubDate", type: "datetime", title: "Published at", validation: (Rule) => Rule.required() }),
+    defineField({ name: "modDate", type: "datetime", title: "Modified at" }),
+    defineField({ name: "featured", type: "boolean", title: "Featured" }),
+    defineField({ name: "archived", type: "boolean", title: "Archived", initialValue: false }),
   ],
 });
