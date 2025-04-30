@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ReactElement } from "react";
 import SmartLink from "@/components/SmartLink";
 import type { PortableTextComponentProps } from "@portabletext/react";
 
@@ -7,7 +7,7 @@ interface CustomBlockProps extends PortableTextComponentProps<any> {
   children?: ReactNode;
 }
 
-export function renderBlock(props: CustomBlockProps): JSX.Element {
+export function renderBlock(props: CustomBlockProps): ReactElement {
   const { value, children, headingLink } = props;
 
   // ✅ URLだけの段落なら SmartLink 表示！
