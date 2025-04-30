@@ -1,14 +1,13 @@
-import type { PortableTextMarkComponent } from "@portabletext/react";
+import type { PortableTextMarkComponentProps } from "@portabletext/react";
 
-export const renderMarks: Record<string, PortableTextMarkComponent> = {
-  link: ({ children, value }) => (
-    <a
-      href={value?.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-accent underline"
-    >
-      {children}
-    </a>
-  ),
+export const renderMarks = {
+  link: ({ value, children }: PortableTextMarkComponentProps<any>) => {
+    const href = value?.href?.trim?.();
+
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    );
+  },
 };

@@ -9,6 +9,9 @@ import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
 import IconRss from "@/assets/icons/IconRss.svg";
 import LinkButton from "./LinkButton.astro";
 import { getSiteConfig } from "@/lib/getSiteConfig";
+import { isActive } from "@/utils/isActive";
+
+const current = Astro.url.pathname;
 
 const site = await getSiteConfig()
 

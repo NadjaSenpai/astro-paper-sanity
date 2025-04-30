@@ -55,11 +55,41 @@ html[data-theme="dark"] {
   }
 }
 
-.active-nav {
-  @apply underline decoration-wavy decoration-2 underline-offset-4;
+@layer utilities {
+  .active-nav {
+    @apply underline decoration-wavy decoration-2 underline-offset-4;
+  }
+
+  .prose a {
+    @apply underline decoration-dashed decoration-[1.5px] underline-offset-6 decoration-2 underline-offset-2 text-accent hover:opacity-80 transition;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.75rem;
+  }
 }
 
 pre[class*="language-"],
 code[class*="language-"] {
-  all: revert !important; /* すべてリセット */
+  all: revert !important;
+}
+
+.embed-container iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem auto;
+  border-radius: 0.5rem;
+}
+
+.prose > :first-child {
+  margin-top: 0 !important;
 }

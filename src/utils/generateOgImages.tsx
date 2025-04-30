@@ -25,6 +25,7 @@ export async function generateOgImageForPost({ post, site }: GenerateOgImageForP
   const postComponent = (
     <PostOgTemplate
       title={post.title ?? ""}
+      description={post.description ?? ""}
       pubDate={post.pubDate} // ✅ 追加！
       modDate={post.modDate} // ✅ 追加！
       siteTitle={site.title}

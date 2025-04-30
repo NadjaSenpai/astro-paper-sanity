@@ -19,7 +19,15 @@ export default defineType({
       type: "array",
       title: "Top Message",
       of: [
-        defineArrayMember({ type: "block" }),
+        defineArrayMember({ type: "block",
+          marks: {
+            decorators: [
+              { title: "Strong", value: "strong" },
+              { title: "Emphasis", value: "em" },
+              { title: "Code", value: "code" },
+            ],
+            annotations: [], // 👈 リンク無効化
+          }, }),
         defineArrayMember({
           type: "image",
           fields: [

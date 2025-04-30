@@ -1,56 +1,49 @@
-import type { PortableTextBlock } from "@portabletext/types";
-import slugify from "@/utils/slugify";
-import React from "react";
+import type { ReactNode } from "react";
+import SmartLink from "@/components/SmartLink";
+import type { PortableTextComponentProps } from "@portabletext/react";
 
-export function renderBlock({
-  value,
-  children,
-  headingLink = true,
-}: {
-  value: PortableTextBlock;
-  children?: React.ReactNode;
+interface CustomBlockProps extends PortableTextComponentProps<any> {
   headingLink?: boolean;
-}) {
-  if (!children) return null;
+  children?: ReactNode;
+}
 
-  const text = Array.isArray(children)
-    ? children.map((c) => (typeof c === "string" ? c : "")).join("")
-    : typeof children === "string"
-    ? children
-    : "";
-  const id = slugify(text);
+export function renderBlock(props: CustomBlockProps): JSX.Element {
+  const { value, children, headingLink } = props;
 
-  const renderHeading = (Tag: keyof JSX.IntrinsicElements, className: string) => (
-    <Tag id={headingLink ? id : undefined} className={className}>
-      {children}
-      {headingLink && (
-        <a
-          href={`#${id}`}
-          className="heading-link ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100"
-          aria-hidden="true"
-        >
-          #
-        </a>
-      )}
-    </Tag>
-  );
-
-  switch (value.style) {
-    case "h1":
-      return renderHeading("h1", "text-4xl font-bold mb-4");
-    case "h2":
-      return renderHeading("h2", "text-3xl font-bold mb-3");
-    case "h3":
-      return renderHeading("h3", "text-2xl font-bold mb-2");
-    case "h4":
-      return renderHeading("h4", "text-xl font-bold mb-1");
-    case "blockquote":
-      return (
-        <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4">
-          {children}
-        </blockquote>
-      );
-    default:
-      return <p className="mb-4">{children}</p>;
+  // ✅ URLだけの段落なら SmartLink 表示！
+  if (
+    value._type === "block" &&
+    value.children?.length === 1 &&
+    value.children[0]?._type === "span" &&
+    typeof value.children[0].text === "string" &&
+    value.children[0].text.trim().match(/^https?:\/\/[^\s]+$/) &&
+    (value.children[0].marks?.length ?? 0) === 0
+  ) {
+    const url = value.children[0].text.trim();
+    return <SmartLink url={url} />;
   }
+
+  // ✅ 通常のブロック処理（見出し・段落など）
+  const Tag =
+    value.style === "h1"
+      ? "h1"
+      : value.style === "h2"
+      ? "h2"
+      : value.style === "h3"
+      ? "h3"
+      : value.style === "h4"
+      ? "h4"
+      : value.style === "blockquote"
+      ? "blockquote"
+      : "p";
+
+  const id =
+    headingLink && Tag === "h2"
+      ? value.children?.[0]?.text
+          ?.toLowerCase()
+          .replace(/[^\w\s]/g, "")
+          .replace(/\s+/g, "-") ?? undefined
+      : undefined;
+
+  return <Tag id={id}>{children}</Tag>;
 }

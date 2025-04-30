@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "jsx": "react",
+    "noEmit": true,
+    "jsx": "react-jsx",
     "jsxImportSource": "react",
     "allowJs": true,
     "skipLibCheck": true,

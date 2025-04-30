@@ -1,3 +1,4 @@
+
 import type { Config } from 'tailwindcss'
 import typography from '@tailwindcss/typography'
 
@@ -7,8 +8,15 @@ const config: Config = {
   },
   // @ts-expect-error: corePlugins is a valid Tailwind option but not in types
   corePlugins: {
-    preflight: false, // ✅ ここに移動
+    preflight: false,
   },
+  safelist: [
+    'active-nav',
+    'underline',
+    'decoration-wavy',
+    'decoration-2',
+    'underline-offset-4',
+  ],
   theme: {
     extend: {
       fontFamily: {

@@ -3,6 +3,7 @@ import { ja } from "date-fns/locale";
 
 interface Props {
   title: string;
+  description?: string;
   author?: string;
   pubDate?: string | Date;
   modDate?: string | Date;
@@ -19,6 +20,7 @@ const parseDate = (value: string | Date | undefined): Date | undefined => {
 export default function PostOgTemplate(props: Props) {
   const {
     title,
+    description,
     author,
     pubDate,
     modDate,
@@ -64,7 +66,27 @@ export default function PostOgTemplate(props: Props) {
       >
         {title}
       </div>
-
+        {description && (
+          <div
+            style={{
+              fontSize: "32px",
+              fontWeight: 400,
+              opacity: 0.9,
+              textAlign: "left",
+              wordBreak: "normal",
+              overflowWrap: "break-word",
+              overflow: "hidden",
+              padding: "0px 50px 30px 50px",
+              maxHeight: "400px",
+              maxWidth: "1100px",
+              marginTop: "10px",
+              marginBottom: "15px",
+              lineHeight: 1.6,
+            }}
+          >
+            {description}
+          </div>
+        )}
       <div
         style={{
           fontSize: "24px",

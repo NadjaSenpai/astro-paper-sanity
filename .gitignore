@@ -4,6 +4,7 @@
 /node_modules
 /studio/node_modules
 /studio/.sanity
+/public/pagefind
 /.astro
 /.pnp
 .pnp.js
