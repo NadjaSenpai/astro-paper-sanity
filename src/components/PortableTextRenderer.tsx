@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, ReactElement } from "react";
 import { PortableText } from "@portabletext/react";
 import CodeBlock from "@/components/CodeBlock";
 import { renderBlock } from "@/utils/renderBlock";
@@ -74,7 +74,7 @@ export default function PortableTextRenderer({ value, headingLink = true }: Prop
             youtube: (props) => renderYouTube({ value: props.value }),
           },
           marks: renderMarks,
-          block: ((props: any) => renderBlock({ ...props, headingLink })) as (props: any) => JSX.Element,
+          block: ((props: any) => renderBlock({ ...props, headingLink })) as (props: any) => ReactElement,
         }}
       />
     </div>
