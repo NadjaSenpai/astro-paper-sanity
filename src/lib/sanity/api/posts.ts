@@ -1,4 +1,4 @@
-import { getClient } from "@/lib/sanity/client";
+import { client } from "@/lib/sanity/client";
 import type { Post } from "@/lib/sanity/api/types";
 import { normalizePost } from "@/lib/sanity/utils/helpers";
 
@@ -17,7 +17,7 @@ export async function getPosts(): Promise<Post[]> {
     content
   }
 `;
-  const result = await getClient().fetch(query);
+  const result = await client.fetch(query);
   return result.map(normalizePost);
 }
 
@@ -36,6 +36,6 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     content
   }
 `;
-  const result = await getClient().fetch(query, { slug });
+  const result = await client.fetch(query, { slug });
   return result ? normalizePost(result) : null;
 }

@@ -1,9 +1,15 @@
 import { createClient } from "@sanity/client";
-import { clientConfig } from "@sanity/clientConfig";
 
-export const client = createClient(clientConfig);
+export const projectId = import.meta.env.SANITY_PROJECT_ID!;
+export const dataset = import.meta.env.SANITY_DATASET!;
+export const apiVersion = "2025-04-23";
+export const useCdn = false;
+export const token = import.meta.env.SANITY_API_READ_TOKEN;
 
-// 必要なら function にして再利用可能にする
-export function getClient() {
-  return createClient(clientConfig);
-}
+export const client = createClient({
+    projectId,
+    dataset,
+    apiVersion,
+    useCdn,
+    token,
+  });
