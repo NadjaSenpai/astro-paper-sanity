@@ -24,14 +24,6 @@ This is a customized blog project built with [Astro](https://astro.build) and [S
 - 🔸 Studio is **restricted** from indexing (via `robots.txt`) or can be password protected if needed
 - 🔸 Deploy hooks and webhooks allow **on-demand rebuilds**
 
-## Lighthouse Score
-
-<p align="center">
-  <a href="https://pagespeed.web.dev/analysis/https-astro-paper-sanity-vercel-app/anc6hbygml?form_factor=desktop&category=performance&category=accessibility&category=best-practices&category=seo&hl=en-US">
-    <img width="710" alt="AstroPaper Lighthouse Score" src="lighthouse.svg">
-  <a>
-</p>
-
 ## Getting Started
 
 ### 1. Clone the repository
