@@ -34,8 +34,6 @@ package-lock.json
 # Dotenv and similar local-only files
 *.local
 *.env
-*.env.ts
-*.env.d.ts
 .env.production
 
 # Deployment
