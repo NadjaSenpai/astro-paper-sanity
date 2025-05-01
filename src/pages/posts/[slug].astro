@@ -6,16 +6,13 @@ import { getPostBySlug, getPosts } from "@/lib/sanity";
 import getSortedPosts from "@/utils/getSortedPosts";
 import type { Post } from "@/lib/sanity/api/types/post";
 
-export const prerender = false;
-export const revalidate = 60;
+export const prerender = true;
 
 export async function getStaticPaths() {
-  const posts: Post[] = await getPosts();
-  return posts
-    .filter((post: Post) => post.slug?.current)
-    .map((post: Post) => ({
-      params: { slug: post.slug.current },
-    }));
+  const posts = await getPosts();
+  return posts.map(post => ({
+    params: { slug: post.slug.current },
+  }));
 }
 
 const { slug } = Astro.params;

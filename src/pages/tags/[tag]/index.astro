@@ -1,40 +1,19 @@
 ---
-import { getPosts } from "@/lib/sanity";
+import { getPosts, getTags } from "@/lib/sanity";
 import Layout from "@/layouts/Layout.astro";
 import Card from "@/components/Card.astro";
 import Main from "@/layouts/Main.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Pagination from "@/components/Pagination.astro";
-import getSortedPosts from "@/utils/getSortedPosts";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 
-const site = await getSiteConfig();
+export const prerender = true;
 
 export async function getStaticPaths() {
-  const allPosts = await getPosts();
-  const tagMap = new Map();
-
-  for (const post of allPosts) {
-    if (!Array.isArray(post.tags)) continue;
-
-    for (const tag of post.tags) {
-      const slug =
-        typeof tag?.slug === "object"
-          ? tag.slug?.current
-          : tag?.slug;
-
-      if (!slug) {
-        console.warn(`[WARN] タグ slug が無効:`, tag);
-        continue;
-      }
-
-      if (!tagMap.has(slug)) tagMap.set(slug, []);
-      tagMap.get(slug).push(post);
-    }
-  }
-
-  return Array.from(tagMap.keys()).map(tag => ({ params: { tag } }));
+  const tags = await getTags();
+  return tags.map(tag => ({
+    params: { tag: typeof tag.slug === "string" ? tag.slug : tag.slug.current },
+  }));
 }
 
 const { tag } = Astro.params;
@@ -47,6 +26,7 @@ const filtered = allPosts.filter(post =>
 );
 
 const posts = filtered.slice(0, 10);
+const site = await getSiteConfig();
 ---
 
 <Layout title={`Tag: ${tag} | ${site.title}`}>

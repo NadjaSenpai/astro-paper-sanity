@@ -9,8 +9,18 @@ import Card from "@/components/Card.astro";
 import Pagination from "@/components/Pagination.astro";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 
-export const prerender = false;
-export const revalidate = 60;
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const site = await getSiteConfig();
+  const posts = getSortedPosts(await getPosts());
+  const pageSize = site.postPerPage ?? 4;
+  const totalPages = Math.ceil(posts.length / pageSize);
+
+  return Array.from({ length: totalPages }).map((_, i) => ({
+    params: { page: String(i + 1) },
+  }));
+}
 
 const { page: current = "1" } = Astro.params;
 const currentPage = Number(current);
@@ -25,7 +35,6 @@ const start = (currentPage - 1) * pageSize;
 const end = start + pageSize;
 const posts = allPosts.slice(start, end);
 
-// ページネーション情報生成
 const pagination = {
   data: posts,
   currentPage,

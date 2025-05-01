@@ -1,38 +1,30 @@
 ---
-import { getPosts } from "@/lib/sanity";
+import { getPosts, getTags } from "@/lib/sanity";
 import Layout from "@/layouts/Layout.astro";
 import Card from "@/components/Card.astro";
 import Main from "@/layouts/Main.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Pagination from "@/components/Pagination.astro";
-import getSortedPosts from "@/utils/getSortedPosts";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 
-const site = await getSiteConfig();
+export const prerender = true;
 
 export async function getStaticPaths() {
-  const allPosts = await getPosts();
+  const tags = await getTags();
+  const posts = await getPosts();
 
-  const tagMap = new Map();
-
-  for (const post of allPosts) {
-    if (!post?.tags) continue;
-    for (const tag of post.tags) {
-      const slug = typeof tag.slug === "object" ? tag.slug.current : tag.slug;
-      if (!slug) continue;
-      if (!tagMap.has(slug)) tagMap.set(slug, []);
-      tagMap.get(slug).push(post);
-    }
-  }
-
-  const paths = [];
-  for (const [slug, posts] of tagMap.entries()) {
-    const totalPages = Math.ceil(posts.length / 10);
-    for (let page = 1; page <= totalPages; page++) {
-      paths.push({ params: { tag: slug, page: page.toString() } });
-    }
-  }
+  const paths = tags.flatMap(tag => {
+    const slug = typeof tag.slug === "string" ? tag.slug : tag.slug.current;
+    const relatedPosts = posts.filter(post =>
+      post.tags?.some(t =>
+        (typeof t.slug === "object" ? t.slug.current : t.slug) === slug
+      )
+    );
+    const totalPages = Math.ceil(relatedPosts.length / 10);
+    return Array.from({ length: totalPages }).map((_, i) => ({
+      params: { tag: slug, page: String(i + 1) },
+    }));
+  });
 
   return paths;
 }
@@ -51,7 +43,9 @@ const totalPages = Math.ceil(filtered.length / 10);
 const start = (currentPage - 1) * 10;
 const end = start + 10;
 const posts = filtered.slice(start, end);
+const site = await getSiteConfig();
 ---
+
 
 <Layout title={`Tag: ${tag} | ${site.title}`}>
 <Header />

@@ -1,21 +1,16 @@
 import type { APIRoute } from "astro";
-import { getPostBySlug, getPosts } from "@/lib/sanity";
+import { getPostBySlug } from "@/lib/sanity";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 import { generateOgImageForPost } from "@/utils/generateOgImages";
-import type { Post } from "@/lib/sanity/api/types";
 
 export const prerender = true;
 
 export async function getStaticPaths() {
-  const site = await getSiteConfig();
-  if (!site.dynamicOgImage) return [];
-
+  const { getPosts } = await import('@/lib/sanity');
   const posts = await getPosts();
-  return posts
-    .filter((post: Post) => post.slug?.current && !post.ogImage)
-    .map((post: Post) => ({
-      params: { slug: post.slug.current },
-    }));
+  return posts.map(post => ({
+    params: { slug: post.slug.current },
+  }));
 }
 
 export const GET: APIRoute = async ({ params }) => {
