@@ -6,7 +6,7 @@ export const prerender = true;
 
 export const GET: APIRoute = async () => {
   const client = createClient({
-    projectId: process.env.SANITY_PROJECT_ID!,
+    projectId: process.env.SANITY_PROJECT_ID || "bwyjt9uz",
     dataset: process.env.SANITY_DATASET || "production",
     apiVersion: "2025-04-21",
     useCdn: false,
