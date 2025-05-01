@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 
 const secret = import.meta.env.REVALIDATE_SECRET;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   const body = await request.json();
   const reqSecret = body.secret;
   const slug = body.slug;
@@ -15,8 +15,14 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response("❌ Missing slug", { status: 400 });
   }
 
+  const runtime = (locals as any).runtime;
+
+  if (!runtime?.revalidate) {
+    return new Response("❌ `runtime.revalidate` is not available in this environment", { status: 500 });
+  }
+
   try {
-    const result = await (Astro as any).revalidate(`/${slug}`);
+    const result = await runtime.revalidate(`/${slug}`);
     return new Response(`✅ Revalidated: /${slug} (${result.status})`);
   } catch (error: any) {
     return new Response(`❌ Revalidation failed: ${error.message}`, { status: 500 });
