@@ -13,6 +13,7 @@ export default defineConfig({
     isr: {
       expiration: 60 * 60 * 24,
       bypassToken: process.env.BYPASS_TOKEN,
+      exclude: [],
     }
   }),
   site: "https://astro-paper-sanity.vercel.app",

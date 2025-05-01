@@ -38,3 +38,4 @@ package-lock.json
 
 # Deployment
 /.vercel
+.vercel
