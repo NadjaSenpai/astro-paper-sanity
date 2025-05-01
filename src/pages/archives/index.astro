@@ -23,7 +23,13 @@ const groupField = "featured";
 const groupValue = true; // ← ✅ booleanで渡すのがポイント
 
 if (!site.showArchives) {
-  return Astro.redirect("/404");
+  const base = import.meta.env.SITE ?? "https://astro-paper-sanity.vercel.app";
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: `${base}/404`
+    }
+  });
 }
 
 const posts = await getPostsByGroupCondition("archived", true);

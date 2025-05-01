@@ -1,31 +1,4 @@
----
-export const prerender = false; // ← SSRのために false
+export const prerender = false;
 
 const base = import.meta.env.SITE ?? "https://astro-paper-sanity.vercel.app";
 return Response.redirect(`${base}/posts/page/1`);
----
-
-<!-- 
-SSG構成に戻す場合はこちらを使用（上の `return` を削除 or コメントアウト）
-
----
-export const prerender = true;
-const isDev = import.meta.env.DEV;
----
-
-<html lang="ja">
-  <head>
-    {!isDev && <meta http-equiv="refresh" content="0; url=/posts/page/1" />}
-    <meta name="robots" content="noindex" />
-    <title>リダイレクト中...</title>
-  </head>
-  <body>
-    <script>
-      location.replace("/posts/page/1");
-    </script>
-    <noscript>
-      <p>リダイレクトしています。<a href="/posts/page/1">こちらをクリック</a>してください。</p>
-    </noscript>
-  </body>
-</html>
--->
