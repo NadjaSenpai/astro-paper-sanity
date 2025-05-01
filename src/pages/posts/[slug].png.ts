@@ -3,7 +3,7 @@ import { getPostBySlug } from "@/lib/sanity";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 import { generateOgImageForPost } from "@/utils/generateOgImages";
 
-export const prerender = true;
+export const prerender = false;
 
 export async function getStaticPaths() {
   const { getPosts } = await import('@/lib/sanity');
