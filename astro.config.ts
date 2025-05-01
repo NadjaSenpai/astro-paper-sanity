@@ -2,11 +2,13 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import path from "path";
-import vercel from "@astrojs/vercel/static";
+import vercel from "@astrojs/vercel";
 
 export default defineConfig({
   output: "static",
-  adapter: vercel(),
+  adapter: vercel({
+    mode: "static",
+  }),
   site: "http://astro-paper-sanity.vercel.app",
   integrations: [react(), sitemap()],
   vite: {
