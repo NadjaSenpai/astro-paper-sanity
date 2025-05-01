@@ -1,7 +1,7 @@
 import { createClient } from "@sanity/client";
 import type { APIRoute } from "astro";
 import { generateOgImageForSite } from "@/utils/generateOgImages";
-import * as env from "../env"; // ← これを追加！
+import * as env from "@/env";
 
 export const prerender = true;
 
