@@ -16,7 +16,7 @@ export default defineConfig({
       exclude: [/^\/api\/.+/],
     }
   }),
-  site: "http://astro-paper-sanity.vercel.app",
+  site: "https://astro-paper-sanity.vercel.app",
   integrations: [react(), sitemap()],
   vite: {
     resolve: {
