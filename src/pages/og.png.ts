@@ -14,11 +14,11 @@ export async function getStaticPaths() {
 
 export const GET: APIRoute = async () => {
   const client = createClient({
-    projectId: import.meta.env.SANITY_PROJECT_ID || "bwyjt9uz",
-    dataset: import.meta.env.SANITY_DATASET || "production",
+    projectId: process.env.SANITY_PROJECT_ID || "bwyjt9uz",
+    dataset: process.env.SANITY_DATASET || "production",
     apiVersion: "2025-04-21",
     useCdn: true,
-    token: import.meta.env.SANITY_API_TOKEN,
+    token: process.env.SANITY_API_TOKEN,
   });
 
   const site = await client.fetch(`*[_type == "settings"][0]`);
