@@ -6,6 +6,9 @@ import { getPostBySlug, getPosts } from "@/lib/sanity";
 import getSortedPosts from "@/utils/getSortedPosts";
 import type { Post } from "@/lib/sanity/api/types/post";
 
+export const prerender = false;
+export const revalidate = 60;
+
 export async function getStaticPaths() {
   const posts: Post[] = await getPosts();
   return posts

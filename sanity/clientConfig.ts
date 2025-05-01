@@ -1,11 +1,12 @@
-import { createClient } from "@sanity/client";
+import dotenv from "dotenv";
+dotenv.config();
 
-export const client = createClient({
+const config = {
   projectId: process.env.SANITY_PROJECT_ID!,
   dataset: process.env.SANITY_DATASET || "production",
+  apiVersion: "2025-04-21",
   useCdn: false,
-  apiVersion: "2025-05-01",
   token: process.env.SANITY_API_TOKEN,
-});
+};
 
-export default client;
+export default config;

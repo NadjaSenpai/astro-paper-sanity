@@ -1,5 +1,4 @@
 ---
-import type { GetStaticPaths } from "astro";
 import { getPosts } from "@/lib/sanity/";
 import getSortedPosts from "@/utils/getSortedPosts";
 import Layout from "@/layouts/Layout.astro";
@@ -10,29 +9,33 @@ import Card from "@/components/Card.astro";
 import Pagination from "@/components/Pagination.astro";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 
+export const prerender = false;
+export const revalidate = 60;
+
+const { page: current = "1" } = Astro.params;
+const currentPage = Number(current);
 const site = await getSiteConfig();
 
-export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
-  const site = await getSiteConfig();
-  const rawPosts = await getPosts();
+const allPosts = getSortedPosts(await getPosts());
+const pageSize = site.postPerPage ?? 4;
+const totalPosts = allPosts.length;
+const lastPage = Math.ceil(totalPosts / pageSize);
 
-  const posts = getSortedPosts(
-    rawPosts
-      .filter(post => post?.pubDate)
-      .map(post => ({
-        ...post,
-        pubDate: new Date(post.pubDate),
-        modDate: post.modDate ? new Date(post.modDate) : undefined,
-      }))
-  );
+const start = (currentPage - 1) * pageSize;
+const end = start + pageSize;
+const posts = allPosts.slice(start, end);
 
-  return paginate(posts, {
-    pageSize: site.postPerPage ?? 4,
-  });
+// ページネーション情報生成
+const pagination = {
+  data: posts,
+  currentPage,
+  lastPage,
+  url: {
+    current: `/posts/page/${currentPage}`,
+    prev: currentPage > 1 ? `/posts/page/${currentPage - 1}` : undefined,
+    next: currentPage < lastPage ? `/posts/page/${currentPage + 1}` : undefined,
+  },
 };
-// props から受け取る
-const { page } = Astro.props;
-const posts = page?.data ?? [];
 ---
 
 <Layout title={`Posts | ${site.title}`}>
@@ -55,7 +58,7 @@ const posts = page?.data ?? [];
     ) : (
       <p>投稿が見つかりませんでした。</p>
     )}
-    <Pagination page={page} basePath="/posts" />
+    <Pagination page={pagination} basePath="/posts/page" />
   </Main>
 
   <Footer />

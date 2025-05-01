@@ -7,6 +7,9 @@ import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Pagination from "@/components/Pagination.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+
+const site = await getSiteConfig();
 
 export async function getStaticPaths() {
   const allPosts = await getPosts();
@@ -50,7 +53,7 @@ const end = start + 10;
 const posts = filtered.slice(start, end);
 ---
 
-<Layout title={`Tag: ${tag}`}>
+<Layout title={`Tag: ${tag} | ${site.title}`}>
 <Header />
   <Main>
   <ul>
