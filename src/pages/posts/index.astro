@@ -1,6 +1,16 @@
 ---
+export const prerender = false; // ← SSRのために false
+
 const base = import.meta.env.SITE ?? "https://astro-paper-sanity.vercel.app";
 return Response.redirect(`${base}/posts/page/1`);
+---
+
+<!-- 
+SSG構成に戻す場合はこちらを使用（上の `return` を削除 or コメントアウト）
+
+---
+export const prerender = true;
+const isDev = import.meta.env.DEV;
 ---
 
 <html lang="ja">
@@ -18,3 +28,4 @@ return Response.redirect(`${base}/posts/page/1`);
     </noscript>
   </body>
 </html>
+-->
