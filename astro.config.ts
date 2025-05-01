@@ -3,11 +3,18 @@ import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import path from "path";
 import vercel from "@astrojs/vercel";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export default defineConfig({
-  output: "static",
+  output: "server",
   adapter: vercel({
-    mode: "static",
+    isr: {
+      expiration: 60 * 60 * 24,
+      bypassToken: process.env.BYPASS_TOKEN,
+      exclude: [/^\/api\/.+/],
+    }
   }),
   site: "http://astro-paper-sanity.vercel.app",
   integrations: [react(), sitemap()],
