@@ -6,7 +6,7 @@ const config = {
   dataset: process.env.SANITY_DATASET || "production",
   apiVersion: "2025-04-21",
   useCdn: false,
-  token: process.env.SANITY_API_TOKEN,
+  token: process.env.SANITY_API_TOKEN, // 認証トークン追加
 };
 
 export default config;

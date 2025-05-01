@@ -8,7 +8,7 @@ export const client = createClient({
   dataset: process.env.SANITY_DATASET || "production",
   useCdn: false,
   apiVersion: "2025-04-21",
-  token: process.env.SANITY_API_TOKEN,
+  token: process.env.SANITY_API_TOKEN, // 認証トークンを明示
 });
 
 export default client;
