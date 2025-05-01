@@ -31,11 +31,7 @@ export function renderImage({ value }: { value: any }) {
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         >
-          <img
-            src={imageUrl}
-            alt={value.alt || ""}
-            className="transition-transform duration-300 ease-in-out scale-100 hover:scale-105 max-h-[90%] max-w-[90%] object-contain"
-          />
+          <img src={imageUrl} alt={value.alt || ""} />
         </div>
       )}
     </>
