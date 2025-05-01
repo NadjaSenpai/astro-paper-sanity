@@ -1,7 +1,6 @@
 import { createClient } from "@sanity/client";
 import type { APIRoute } from "astro";
 import { generateOgImageForSite } from "@/utils/generateOgImages";
-import * as env from "@/env";
 
 export const prerender = true;
 
@@ -15,11 +14,11 @@ export async function getStaticPaths() {
 
 export const GET: APIRoute = async () => {
   const client = createClient({
-    projectId: env.SANITY_PROJECT_ID,
-    dataset: env.SANITY_DATASET,
+    projectId: import.meta.env.SANITY_PROJECT_ID || "bwyjt9uz",
+    dataset: import.meta.env.SANITY_DATASET || "production",
     apiVersion: "2025-04-21",
-    useCdn: false,
-    token: env.SANITY_API_TOKEN,
+    useCdn: true,
+    token: import.meta.env.SANITY_API_TOKEN,
   });
 
   const site = await client.fetch(`*[_type == "settings"][0]`);
