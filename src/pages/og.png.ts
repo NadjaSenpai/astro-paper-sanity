@@ -1,21 +1,19 @@
 import type { APIRoute } from "astro";
 import { generateOgImageForSite } from "@/utils/generateOgImages";
 
-// prerender有効
 export const prerender = true;
 
-// ビルド時はSanityを使わず最低限の静的パスを返すことで安全にする
+// 静的パスはダミー（prerender安全）
 export async function getStaticPaths() {
-  // エラー回避のため最低1件ダミーを設定する
   return [{ params: { slug: "site" } }];
 }
 
 export const GET: APIRoute = async () => {
   const { createClient } = await import("@sanity/client");
-  const dotenv = await import("dotenv");
-  dotenv.config();
 
-  // Sanity Clientの生成（環境変数はVercel設定でセット済み）
+  // 👇 dotenv.config() は絶対に呼ばない！
+
+  // 環境変数はVercel管理画面で設定済みなのでここで直接使える
   const client = createClient({
     projectId: process.env.SANITY_PROJECT_ID!,
     dataset: process.env.SANITY_DATASET!,
