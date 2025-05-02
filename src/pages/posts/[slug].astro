@@ -1,29 +1,47 @@
 ---
+// src/pages/posts/[slug].astro
+
+export const prerender = false; // ISR or SSG
+
 import PostDetails from "@/layouts/PostDetails.astro";
 import Layout from "@/layouts/Layout.astro";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getPostBySlug, getPosts } from "@/lib/sanity";
 import getSortedPosts from "@/utils/getSortedPosts";
 import type { Post } from "@/lib/sanity/api/types/post";
-
-export const prerender = true;
+import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
+import { extractLinks } from "@/lib/sanity/utils/extractLinks";
+import { cleansePortableText } from "@/lib/sanity/utils/helpers";
+import { fetchEmbed } from "@/lib/fetchEmbed";
 
 export async function getStaticPaths() {
   const posts = await getPosts();
-  return posts.map(post => ({
-    params: { slug: post.slug.current },
-  }));
+  return posts.map((p) => ({ params: { slug: p.slug.current } }));
 }
 
 const { slug } = Astro.params;
 const post: Post | null = await getPostBySlug(slug);
-const posts: Post[] = await getPosts();
-const sortedPosts = getSortedPosts(posts);
-const site = await getSiteConfig();
+if (!post) throw new Error(`❌ 投稿が見つかりません: ${slug}`);
 
-if (!post) {
-  throw new Error(`❌ 投稿が見つかりませんでした: ${slug}`);
-}
+// ■■ ここから修正 ■■
+// 1) cleansePortableText で必ず配列化しておく
+const contentBlocks = cleansePortableText(post.content);
+
+// 2) その配列を使ってリンク抽出
+const links = extractLinks(contentBlocks);
+
+const embedMap: Record<string, unknown> = {};
+await Promise.all(
+  links.map(async (url) => {
+    const e = await fetchEmbed(url);
+    if (e) embedMap[url] = e;
+  })
+);
+
+// 3) 以降のレンダリングでも contentBlocks を使う
+const site = await getSiteConfig();
+const allPosts: Post[] = await getPosts();
+const sortedPosts = getSortedPosts(allPosts);
 ---
 
 <Layout
@@ -33,5 +51,66 @@ if (!post) {
   modDate={post.modDate}
   ogImage={`/og/${post.slug.current}.png`}
 >
-  <PostDetails post={post} posts={sortedPosts} />
+  <PostDetails
+    post={post}
+    embedMap={embedMap}
+    posts={allPosts}
+    sortedPosts={sortedPosts}
+  >
+    <article class="mx-auto prose mt-8 max-w-3xl">
+      {/* SSR版に渡すのも、必ず配列化済みの contentBlocks */}
+      <PortableTextRendererSSR
+        value={contentBlocks}
+        embedMap={embedMap}
+      />
+    </article>
+  </PostDetails>
+
+  <script is:inline>
+    document.addEventListener("DOMContentLoaded", () => {
+      document
+        .querySelectorAll('figure.not-prose img[data-full-src]')
+        .forEach((img) => {
+          img.style.cursor = "pointer";
+          img.addEventListener("click", () => {
+            const ex = document.getElementById("image-modal-overlay");
+            if (ex) return ex.remove();
+            const ov = document.createElement("div");
+            ov.id = "image-modal-overlay";
+            Object.assign(ov.style, {
+              position: "fixed",
+              inset: "0",
+              background: "rgba(0,0,0,0.5)",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: "9999",
+              opacity: "0",
+              transition: "opacity 200ms ease",
+              cursor: "pointer",
+            });
+            const mi = document.createElement("img");
+            mi.src = img.dataset.fullSrc;
+            Object.assign(mi.style, {
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              transform: "scale(0.95)",
+              transition: "transform 200ms ease",
+            });
+            ov.append(mi);
+            document.body.append(ov);
+            requestAnimationFrame(() => {
+              ov.style.opacity = "1";
+              mi.style.transform = "scale(1)";
+            });
+            ov.addEventListener("click", () => {
+              ov.style.opacity = "0";
+              mi.style.transform = "scale(0.95)";
+              setTimeout(() => ov.remove(), 200);
+            });
+          });
+        });
+    });
+  </script>
 </Layout>

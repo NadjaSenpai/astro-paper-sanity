@@ -26,6 +26,7 @@ export function normalizePost(post: any): Post {
 
   return {
     ...post,
+    content: cleansePortableText(post.content),
     pubDate: pub,
     modDate: mod,
     slug: typeof post.slug === "string" ? { current: post.slug } : post.slug,

@@ -16,7 +16,7 @@ export async function getPosts(): Promise<Post[]> {
     featured,
     archived,
     ogImage,
-    content
+    content,
   }`;
 
   const result = await client.fetch(query);
@@ -36,7 +36,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     featured,
     archived,
     ogImage,
-    content
+    content,
   }`;
 
   const result = await client.fetch(query, { slug });

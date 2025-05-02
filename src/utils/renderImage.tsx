@@ -1,39 +1,62 @@
-import { useState } from "react";
-import { urlFor } from "@/lib/sanity/utils/image";
+// src/utils/renderImage.tsx
+import imageUrlBuilder from "@sanity/image-url";
+import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import type { PortableTextImage } from "@portabletext/types";
+import { projectId, dataset } from "@/lib/sanity/client";
 
-export function renderImage({ value }: { value: any }) {
-  const [isOpen, setIsOpen] = useState(false);
+const builder = imageUrlBuilder({ projectId, dataset });
 
-  if (!value?.asset?._ref) return null;
+export function urlFor(source: SanityImageSource) {
+  return builder.image(source);
+}
 
-  const imageUrl = urlFor(value).url();
+export function renderImage({
+  value,
+}: {
+  value: PortableTextImage & {
+    alignment?: "left" | "center" | "right";
+    width?: number;
+    alt?: string;
+    caption?: string | null;
+  };
+}) {
+  const { alignment = "center", width, alt, caption } = value;
+
+  // 🖼 画像 URL
+  const src = urlFor(value)
+    .auto("format")
+    .width(width ?? 600)
+    .url();
+
+  // 🧭 alignment 別に justify-* を切り替え
+  const justifyClass =
+    alignment === "right"
+      ? "justify-end"
+      : alignment === "left"
+      ? "justify-start"
+      : "justify-center";
+
+  // 🎨 style で幅を固定する場合
+  const style = width ? { width: `${width}px` } : undefined;
 
   return (
-    <>
+    <figure
+      className={`not-prose my-4 flex ${justifyClass}`}
+      // figure 自体はフル幅のブロックです
+    >
       <img
-        src={imageUrl}
-        alt={value.alt || ""}
-        className={`my-6 cursor-pointer mx-auto ${
-          value.alignment === "left"
-            ? "ml-0 mr-auto"
-            : value.alignment === "right"
-            ? "ml-auto mr-0"
-            : "mx-auto"
-        }`}
-        style={{
-          maxWidth: value.width ? `${value.width}px` : "100%",
-        }}
-        onClick={() => setIsOpen(true)}
+        src={src}
+        data-full-src={value.asset.url}
+        alt={alt || ""}
+        loading="lazy"
+        className="max-w-full rounded"
+        style={style}
       />
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 transition-opacity duration-300"
-          onClick={() => setIsOpen(false)}
-        >
-          <img src={imageUrl} alt={value.alt || ""} />
-        </div>
+      {caption && (
+        <figcaption className="mt-2 text-center text-sm text-foreground/70">
+          {caption}
+        </figcaption>
       )}
-    </>
+    </figure>
   );
 }

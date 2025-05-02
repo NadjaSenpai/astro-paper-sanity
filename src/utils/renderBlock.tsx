@@ -1,16 +1,19 @@
 import type { ReactNode, ReactElement } from "react";
-import SmartLink from "@/components/SmartLink";
 import type { PortableTextComponentProps } from "@portabletext/react";
+import type { EmbedData } from "@/components/SmartLink";
+import SmartLinkClient from "@/components/SmartLink";
+import SmartLinkSSR from "@/components/SmartLinkSSR";
 
 interface CustomBlockProps extends PortableTextComponentProps<any> {
   headingLink?: boolean;
   children?: ReactNode;
+  isSSR?: boolean;
+  embedMap?: Record<string, EmbedData>;
 }
 
 export function renderBlock(props: CustomBlockProps): ReactElement {
-  const { value, children, headingLink } = props;
+  const { value, children, headingLink, isSSR = false, embedMap = {} } = props;
 
-  // ✅ URLだけの段落なら SmartLink 表示！
   if (
     value._type === "block" &&
     value.children?.length === 1 &&
@@ -20,10 +23,13 @@ export function renderBlock(props: CustomBlockProps): ReactElement {
     (value.children[0].marks?.length ?? 0) === 0
   ) {
     const url = value.children[0].text.trim();
-    return <SmartLink url={url} />;
+    return isSSR ? (
+      <SmartLinkSSR url={url} embed={embedMap[url] ?? null} />
+    ) : (
+      <SmartLinkClient url={url} />
+    );
   }
 
-  // ✅ 通常のブロック処理（見出し・段落など）
   const Tag =
     value.style === "h1"
       ? "h1"
