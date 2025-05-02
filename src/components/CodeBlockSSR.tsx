@@ -16,6 +16,7 @@ export default function CodeBlockSSR({ code, language }: CodeBlockSSRProps) {
         showLineNumbers
         wrapLongLines
         customStyle={{
+          background: "transparent",
           border: "none",
           margin: 0,
           // ── color は指定しない！
