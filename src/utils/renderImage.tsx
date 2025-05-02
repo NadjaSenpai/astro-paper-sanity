@@ -1,55 +1,42 @@
 // src/utils/renderImage.tsx
 import imageUrlBuilder from "@sanity/image-url";
-import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
-import type { PortableTextImage } from "@portabletext/types";
 import { projectId, dataset } from "@/lib/sanity/client";
 
 const builder = imageUrlBuilder({ projectId, dataset });
-
-export function urlFor(source: SanityImageSource) {
-  return builder.image(source);
-}
+const imageBuilder = (source: any) => builder.image(source).auto("format");
 
 export function renderImage({
   value,
 }: {
-  value: PortableTextImage & {
-    alignment?: "left" | "center" | "right";
-    width?: number;
+  value: any & {
+    asset: { url: string };
     alt?: string;
     caption?: string | null;
+    alignment?: string;
+    width?: number;
   };
 }) {
-  const { alignment = "center", width, alt, caption } = value;
+  const { asset, alt, caption, alignment, width } = value;
+  const thumbUrl = imageBuilder(asset).width(600).url();
+  const fullUrl  = imageBuilder(asset).url();
 
-  // 🖼 画像 URL
-  const src = urlFor(value)
-    .auto("format")
-    .width(width ?? 600)
-    .url();
-
-  // 🧭 alignment 別に justify-* を切り替え
+  // alignment を Tailwind クラスに変換
   const justifyClass =
     alignment === "right"
       ? "justify-end"
       : alignment === "left"
       ? "justify-start"
       : "justify-center";
-
-  // 🎨 style で幅を固定する場合
   const style = width ? { width: `${width}px` } : undefined;
 
   return (
-    <figure
-      className={`not-prose my-4 flex ${justifyClass}`}
-      // figure 自体はフル幅のブロックです
-    >
+    <figure className={`not-prose my-4 flex ${justifyClass}`}>
       <img
-        src={src}
-        data-full-src={value.asset.url}
-        alt={alt || ""}
+        src={thumbUrl}
+        data-full-src={fullUrl}
+        alt={alt ?? ""}
         loading="lazy"
-        className="max-w-full rounded"
+        className="cursor-pointer max-w-full rounded transition-transform duration-200"
         style={style}
       />
       {caption && (

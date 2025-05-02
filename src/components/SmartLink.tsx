@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-interface EmbedData {
+export interface EmbedData {
   type: "oembed" | "ogp";
   html?: string;
   title?: string;

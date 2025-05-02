@@ -1,28 +1,35 @@
-import React from "react";
-import type { PortableTextBlock } from "@portabletext/types";
-import type { EmbedData } from "@/components/SmartLink";
-import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
+// src/components/PortableTextRendererIsland.tsx
 import PortableTextRendererClient from "@/components/PortableTextRendererClient";
+import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
+import type { EmbedData } from "@/components/SmartLink";
 
 interface Props {
-  value: PortableTextBlock[];
-  embedMap?: Record<string, EmbedData>;
+  value: any[];
   headingLink?: boolean;
+  embedMap: Record<string, EmbedData>;
 }
 
 export default function PortableTextRendererIsland({
   value,
-  embedMap = {},
   headingLink = true,
+  embedMap,
 }: Props) {
-  const isClient = typeof window !== "undefined";
-  return isClient ? (
-    <PortableTextRendererClient value={value} headingLink={headingLink} />
-  ) : (
-    <PortableTextRendererSSR
-      value={value}
-      embedMap={embedMap}
-      headingLink={headingLink}
-    />
-  );
+  // SSR のみ、クライアントのみを切り分ける場合は typeof window で検出
+  if (typeof window === "undefined") {
+    return (
+      <PortableTextRendererSSR
+        value={value}
+        headingLink={headingLink}
+        embedMap={embedMap}
+      />
+    );
+  } else {
+    return (
+      <PortableTextRendererClient
+        value={value}
+        headingLink={headingLink}
+        embedMap={embedMap}
+      />
+    );
+  }
 }

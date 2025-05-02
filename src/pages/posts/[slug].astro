@@ -1,12 +1,13 @@
 ---
 // src/pages/posts/[slug].astro
 
-export const prerender = false; // ISR or SSG
+export const prerender = false; // ISR のままにしたい場合は false、SSGしたい場合は true
 
 import PostDetails from "@/layouts/PostDetails.astro";
 import Layout from "@/layouts/Layout.astro";
 import { getSiteConfig } from "@/lib/getSiteConfig";
-import { getPostBySlug, getPosts } from "@/lib/sanity";
+import { getPostBySlug } from "@/lib/sanity/api/posts";
+import { getPosts } from "@/lib/sanity";
 import getSortedPosts from "@/utils/getSortedPosts";
 import type { Post } from "@/lib/sanity/api/types/post";
 import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
@@ -23,13 +24,15 @@ const { slug } = Astro.params;
 const post: Post | null = await getPostBySlug(slug);
 if (!post) throw new Error(`❌ 投稿が見つかりません: ${slug}`);
 
-// ■■ ここから修正 ■■
-// 1) cleansePortableText で必ず配列化しておく
+// 全ポストを取得してソート済みリストを用意
+const allPosts: Post[] = await getPosts();
+const sortedPosts = getSortedPosts(allPosts);
+
+// ポータブルテキストは必ず配列化
 const contentBlocks = cleansePortableText(post.content);
 
-// 2) その配列を使ってリンク抽出
+// 埋め込みリンクを抽出してフェッチ
 const links = extractLinks(contentBlocks);
-
 const embedMap: Record<string, unknown> = {};
 await Promise.all(
   links.map(async (url) => {
@@ -38,10 +41,7 @@ await Promise.all(
   })
 );
 
-// 3) 以降のレンダリングでも contentBlocks を使う
 const site = await getSiteConfig();
-const allPosts: Post[] = await getPosts();
-const sortedPosts = getSortedPosts(allPosts);
 ---
 
 <Layout
@@ -58,59 +58,105 @@ const sortedPosts = getSortedPosts(allPosts);
     sortedPosts={sortedPosts}
   >
     <article class="mx-auto prose mt-8 max-w-3xl">
-      {/* SSR版に渡すのも、必ず配列化済みの contentBlocks */}
-      <PortableTextRendererSSR
-        value={contentBlocks}
-        embedMap={embedMap}
-      />
+      <!-- prose の外に逃がす -->
+      <div class="not-prose">
+      <!-- 完全 SSR 版だけを使う -->
+        <PortableTextRendererSSR
+          value={contentBlocks}
+          embedMap={embedMap}
+        />
+      </div>
     </article>
   </PostDetails>
 
+  <!-- ここから純インライン JS でモーダル＆Copyボタン制御 -->
   <script is:inline>
-    document.addEventListener("DOMContentLoaded", () => {
-      document
-        .querySelectorAll('figure.not-prose img[data-full-src]')
-        .forEach((img) => {
-          img.style.cursor = "pointer";
-          img.addEventListener("click", () => {
-            const ex = document.getElementById("image-modal-overlay");
-            if (ex) return ex.remove();
-            const ov = document.createElement("div");
-            ov.id = "image-modal-overlay";
-            Object.assign(ov.style, {
-              position: "fixed",
-              inset: "0",
-              background: "rgba(0,0,0,0.5)",
-              backdropFilter: "blur(4px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: "9999",
-              opacity: "0",
-              transition: "opacity 200ms ease",
-              cursor: "pointer",
-            });
-            const mi = document.createElement("img");
-            mi.src = img.dataset.fullSrc;
-            Object.assign(mi.style, {
-              maxWidth: "90vw",
-              maxHeight: "90vh",
-              transform: "scale(0.95)",
-              transition: "transform 200ms ease",
-            });
-            ov.append(mi);
-            document.body.append(ov);
-            requestAnimationFrame(() => {
-              ov.style.opacity = "1";
-              mi.style.transform = "scale(1)";
-            });
-            ov.addEventListener("click", () => {
-              ov.style.opacity = "0";
-              mi.style.transform = "scale(0.95)";
-              setTimeout(() => ov.remove(), 200);
-            });
+  document.addEventListener("DOMContentLoaded", () => {
+    // ===== 画像クリックでモーダル表示 =====
+    document
+      .querySelectorAll('figure.not-prose img[data-full-src]')
+      .forEach((img) => {
+        img.style.cursor = "pointer";
+        img.addEventListener("click", () => {
+          const existing = document.getElementById("image-modal-overlay");
+          if (existing) { existing.remove(); return; }
+          const overlay = document.createElement("div");
+          overlay.id = "image-modal-overlay";
+          Object.assign(overlay.style, {
+            position: "fixed",
+            inset: "0",
+            background: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: "9999",
+            opacity: "0",
+            transition: "opacity 200ms ease",
+            cursor: "pointer",
+          });
+          const modalImg = document.createElement("img");
+          modalImg.src = img.dataset.fullSrc;
+          Object.assign(modalImg.style, {
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+            transform: "scale(0.95)",
+            transition: "transform 200ms ease",
+          });
+          overlay.appendChild(modalImg);
+          document.body.appendChild(overlay);
+          requestAnimationFrame(() => {
+            overlay.style.opacity = "1";
+            modalImg.style.transform = "scale(1)";
+          });
+          overlay.addEventListener("click", () => {
+            overlay.style.opacity = "0";
+            modalImg.style.transform = "scale(0.95)";
+            setTimeout(() => overlay.remove(), 200);
           });
         });
+      });
+
+    // ===== CodeBlock に Copy ボタンを付与（行番号スパンを削除） =====
+    document.querySelectorAll("pre.code-block-wrapper").forEach((pre) => {
+      if (pre.querySelector(".copy-code")) return;
+
+      const codeEl = pre.querySelector("code");
+      if (!codeEl) return;
+      pre.classList.add("relative");
+
+      const btn = document.createElement("button");
+      btn.className =
+        "copy-code absolute right-3 top-2 z-10 rounded px-2 py-1 text-xs font-medium " +
+        "bg-gray-200 text-black dark:bg-gray-800 dark:text-white";
+      btn.innerText = "Copy";
+      pre.appendChild(btn);
+
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        // 1) コード要素をクローン
+        const clone = codeEl.cloneNode(true);
+
+        // 2) react-syntax-highlighter の行番号スパンを丸ごと削除
+        clone.querySelectorAll('span[class*="line-number"]').forEach((el) => el.remove());
+
+        // 3) テキスト化して余計な空行除去
+        let text = (clone.textContent || "").replace(/^\n+|\n+$/g, "");
+
+        // 4) 念のため「行頭の数字＋空白１文字」が残ってたら削る
+        text = text
+          .split("\n")
+          .map((line) => line.replace(/^\d+\s/, ""))
+          .join("\n");
+
+        // 5) クリップボードに書き込み
+        await navigator.clipboard.writeText(text);
+
+        // 6) UI フィードバック
+        btn.innerText = "Copied!";
+        setTimeout(() => (btn.innerText = "Copy"), 700);
+      });
     });
+  });
   </script>
 </Layout>

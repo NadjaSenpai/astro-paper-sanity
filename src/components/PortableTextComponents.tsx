@@ -21,14 +21,14 @@ export function createPortableTextComponents({
   return {
     types: {
       code(props: any) {
-        if (isSSR) {
-          const { code, language } = props.value as { code: string; language?: string };
-          return <CodeBlockSSR code={code} language={language} />;
-        }
-        return <CodeBlock value={props.value} />;
+        const { code, language } = props.value as { code: string; language?: string };
+        return isSSR ? (
+          <CodeBlockSSR code={code} language={language} />
+        ) : (
+          <CodeBlock value={props.value} />
+        );
       },
       image(props: any) {
-        // SSR でも Client でも常に ImageWithModal を使う
         return <ImageWithModal value={props.value} />;
       },
       youtube(props: any) {
