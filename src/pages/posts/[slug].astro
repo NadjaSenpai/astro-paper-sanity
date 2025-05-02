@@ -116,47 +116,6 @@ const site = await getSiteConfig();
           });
         });
       });
-
-    // ===== CodeBlock に Copy ボタンを付与（行番号スパンを削除） =====
-    document.querySelectorAll("pre.code-block-wrapper").forEach((pre) => {
-      if (pre.querySelector(".copy-code")) return;
-
-      const codeEl = pre.querySelector("code");
-      if (!codeEl) return;
-      pre.classList.add("relative");
-
-      const btn = document.createElement("button");
-      btn.className =
-        "copy-code absolute right-3 top-2 z-10 rounded px-2 py-1 text-xs font-medium " +
-        "bg-gray-200 text-black dark:bg-gray-800 dark:text-white";
-      btn.innerText = "Copy";
-      pre.appendChild(btn);
-
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        // 1) コード要素をクローン
-        const clone = codeEl.cloneNode(true);
-
-        // 2) react-syntax-highlighter の行番号スパンを丸ごと削除
-        clone.querySelectorAll('span[class*="line-number"]').forEach((el) => el.remove());
-
-        // 3) テキスト化して余計な空行除去
-        let text = (clone.textContent || "").replace(/^\n+|\n+$/g, "");
-
-        // 4) 念のため「行頭の数字＋空白１文字」が残ってたら削る
-        text = text
-          .split("\n")
-          .map((line) => line.replace(/^\d+\s/, ""))
-          .join("\n");
-
-        // 5) クリップボードに書き込み
-        await navigator.clipboard.writeText(text);
-
-        // 6) UI フィードバック
-        btn.innerText = "Copied!";
-        setTimeout(() => (btn.innerText = "Copy"), 700);
-      });
-    });
   });
   </script>
 </Layout>

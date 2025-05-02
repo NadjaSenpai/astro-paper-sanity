@@ -1,10 +1,11 @@
-// src/components/portableTextComponents.tsx
+// src/components/PortableTextComponents.tsx
 import CodeBlock from "@/components/CodeBlock";
 import CodeBlockSSR from "@/components/CodeBlockSSR";
 import ImageWithModal from "@/components/ImageWithModal";
 import { renderBlock } from "@/utils/renderBlock";
 import { renderMarks } from "@/utils/renderMarks";
 import { renderYouTube } from "@/utils/renderYouTube";
+import type { PortableTextComponentProps } from "@portabletext/react";
 import type { EmbedData } from "@/components/SmartLink";
 
 interface ComponentOptions {
@@ -20,7 +21,8 @@ export function createPortableTextComponents({
 }: ComponentOptions) {
   return {
     types: {
-      code(props: any) {
+      code: (props: any) => {
+        // props.value = { code: string; language?: string }
         const { code, language } = props.value as { code: string; language?: string };
         return isSSR ? (
           <CodeBlockSSR code={code} language={language} />
@@ -28,16 +30,11 @@ export function createPortableTextComponents({
           <CodeBlock value={props.value} />
         );
       },
-      image(props: any) {
-        return <ImageWithModal value={props.value} />;
-      },
-      youtube(props: any) {
-        return renderYouTube({ value: props.value });
-      },
+      image: (props: any) => <ImageWithModal value={props.value} />,
+      youtube: (props: any) => renderYouTube({ value: props.value }),
     },
     marks: renderMarks,
-    block(props: any) {
-      return renderBlock({ ...props, headingLink, isSSR, embedMap });
-    },
+    block: (props: PortableTextComponentProps<any>) =>
+      renderBlock({ ...props, headingLink, isSSR, embedMap }),
   };
 }

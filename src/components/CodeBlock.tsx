@@ -1,46 +1,65 @@
-import { useEffect, useState } from "react";
+// src/components/CodeBlock.tsx
+"use client";
+
+import { useEffect } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { nightOwl } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { oneLight } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import vscDarkPlus from "react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus";
 
-const CodeBlock = ({ value }: { value: { code: string; language?: string } }) => {
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
+interface CodeBlockProps {
+  value: { code: string; language?: string };
+}
 
+export default function CodeBlock({ value }: CodeBlockProps) {
   useEffect(() => {
-    const current = document.documentElement.getAttribute("data-theme") as "light" | "dark";
-    setTheme(current);
+    const blocks = Array.from(
+      document.querySelectorAll("pre.code-block-wrapper")
+    );
+    for (const pre of blocks) {
+      if (pre.querySelector(".copy-code")) continue;
+      pre.classList.add("relative");
 
-    const observer = new MutationObserver(() => {
-      const t = document.documentElement.getAttribute("data-theme") as "light" | "dark";
-      if (t && t !== theme) setTheme(t);
-    });
+      const btn = document.createElement("button");
+      btn.className =
+        "copy-code absolute right-3 top-2 z-10 rounded bg-muted px-2 py-1 text-xs font-medium text-foreground";
+      btn.innerText = "Copy";
+      pre.appendChild(btn);
 
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-
-    return () => observer.disconnect();
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const codeEl = pre.querySelector("code");
+        if (!codeEl) return;
+        const clone = codeEl.cloneNode(true) as HTMLElement;
+        // 行番号スパンを削除
+        clone
+          .querySelectorAll('span[class*="line-number"]')
+          .forEach((el) => el.remove());
+        let text = (clone.textContent || "").replace(/^\n+|\n+$/g, "");
+        text = text
+          .split("\n")
+          .map((line) => line.replace(/^\d+\s/, ""))
+          .join("\n");
+        await navigator.clipboard.writeText(text);
+        btn.innerText = "Copied!";
+        setTimeout(() => (btn.innerText = "Copy"), 700);
+      });
+    }
   }, []);
 
-  const language = value.language || "plaintext";
-  const code = value.code || "";
-
-  if (!theme) return null;
-
   return (
-    <div className="my-4 not-prose text-[unset] relative">
+    <pre className="code-block-wrapper my-4 not-prose">
       <SyntaxHighlighter
-        language={language}
-        style={theme === "dark" ? nightOwl : oneLight}
+        language={value.language ?? "plaintext"}
+        style={vscDarkPlus}
         showLineNumbers
         wrapLongLines
-        customStyle={{ background: "transparent", color: "inherit" }}
+        customStyle={{
+          border: "none",
+          margin: 0,
+          // ── color は指定しない！
+        }}
       >
-        {code}
+        {value.code}
       </SyntaxHighlighter>
-    </div>
+    </pre>
   );
-};
-
-export default CodeBlock;
+}

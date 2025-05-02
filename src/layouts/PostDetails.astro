@@ -14,7 +14,9 @@ import slugify from "@/utils/slugify";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getShareLinks } from "@/constants";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
+import { ClientOnly } from "astro/components";
 import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
+import PortableTextRendererClient from "@/components/PortableTextRendererClient";
 
 const site = await getSiteConfig();
 const SHARE_LINKS = getShareLinks(site);
@@ -42,6 +44,8 @@ const allPosts = Array.isArray(posts)
 const idx = allPosts.findIndex((p) => p.slug === safeSlug);
 const prev = idx > 0 ? allPosts[idx - 1] : null;
 const next = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
+
+const blocks = cleansePortableText(post.content);
 ---
 
 <Layout>
@@ -67,13 +71,17 @@ const next = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
       <Datetime pubDate={pubDate} modDate={modDate} timezone="Asia/Tokyo" />
     </div>
 
-    <article class="mx-auto prose mt-8 max-w-3xl">
-      <PortableTextRendererSSR
-        value={cleansePortableText(content)}
+    <article class="mx-auto prose mt-8 max-w-3xl not-prose">
+      <!-- クライアントマウント後にだけレンダリング -->
+      <PortableTextRendererClient
+        client:load
+        value={blocks}
         embedMap={embedMap}
         headingLink
       />
     </article>
+
+    <!-- 末尾にインライン JS 追加 -->
 
     {safeTags.length > 0 && (
       <ul class="mt-6 flex flex-wrap gap-3">
