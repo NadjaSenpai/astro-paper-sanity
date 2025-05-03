@@ -36,8 +36,8 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64
           push: false
-          cache-from: type=registry,ref=ghcr.io//${{ lower(github.repository_owner) }}/${{ lower(github.event.repository.name) }}:buildcache
-          cache-to: type=registry,ref=ghcr.io//${{ lower(github.repository_owner) }}/${{ lower(github.event.repository.name) }}:buildcache,mode=max
+          cache-from: type=registry,ref=ghcr.io/nadjasenpai/astro-paper-sanity:buildcache
+          cache-to: type=registry,ref=ghcr.io/nadjasenpai/astro-paper-sanity:buildcache,mode=max
           outputs: type=local,dest=./_cache_output
 
       - name: Extract build output
@@ -55,8 +55,8 @@ jobs:
       - name: Deploy to Cloudflare Pages
         run: |
           wrangler pages deploy ./dist \
-            --project-name ${{ secrets.CF_PAGES_PROJECT }} \
+            --project-name astro-paper-sanity \
             --branch main \
             --functions ./functions/api
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
