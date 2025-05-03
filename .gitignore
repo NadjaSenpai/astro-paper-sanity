@@ -8,7 +8,6 @@
 /.astro
 /.pnp
 .pnp.js
-package-lock.json
 
 # Compiled Sanity Studio
 /dist
