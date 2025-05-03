@@ -2,20 +2,13 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import path from "path";
-import vercel from "@astrojs/vercel";
+import cloudflare from '@astrojs/cloudflare';
 import dotenv from "dotenv";
 
 dotenv.config();
 
 export default defineConfig({
-  output: "server",
-  adapter: vercel({
-    isr: {
-      expiration: 86400,
-      bypassToken: process.env.BYPASS_TOKEN,
-      exclude: [],
-    },
-  }),
+  adapter: cloudflare(),
   site: process.env.SITE || "https://astro-paper-sanity.vercel.app",
   integrations: [react(), sitemap()],
   vite: {
