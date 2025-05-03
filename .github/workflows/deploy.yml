@@ -42,12 +42,10 @@ jobs:
 
       - name: Extract build output
         run: |
-          IMAGE_ID=$(docker buildx imagetools inspect --raw . | jq -r '.manifests[0].digest')
-          docker pull $IMAGE_ID
-          CONTAINER=$(docker create $IMAGE_ID)
-          docker cp $CONTAINER:/app/dist ./dist
-          docker cp $CONTAINER:/app/functions/api ./functions/api
-          docker rm $CONTAINER
+          mkdir -p dist
+          mkdir -p functions/api
+          cp -r _cache_output/dist/* dist/
+          cp -r _cache_output/functions/api/* functions/api/
 
       - name: Install Wrangler
         run: npm install -g wrangler@3
