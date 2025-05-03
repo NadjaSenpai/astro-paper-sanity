@@ -33,7 +33,7 @@ export const GET: APIRoute = async ({ request }) => {
       }),
       {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store, max-age=0" },
       }
     );
   }
@@ -55,7 +55,7 @@ export const GET: APIRoute = async ({ request }) => {
         const data = await res.json();
         return new Response(
           JSON.stringify({ type: "oembed", html: data.html }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
+          { status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store, max-age=0" } }
         );
       }
     } catch (err) {
@@ -90,7 +90,7 @@ export const GET: APIRoute = async ({ request }) => {
           error: true,
           message: "OGP metadata not found",
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json", "Cache-Control": "no-store, max-age=0" } }
       );
     }
 
@@ -102,7 +102,7 @@ export const GET: APIRoute = async ({ request }) => {
         description: ogpDesc,
         url: ogpUrl,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store, max-age=0" } }
     );
   } catch (err) {
     console.error("OGP fallback fetch failed", err);
@@ -111,7 +111,7 @@ export const GET: APIRoute = async ({ request }) => {
         error: true,
         message: "Failed to fetch OGP",
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json", "Cache-Control": "no-store, max-age=0" } }
     );
   }
 };
