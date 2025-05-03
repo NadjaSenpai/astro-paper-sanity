@@ -2,14 +2,13 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import path from "path";
-import cloudflare from '@astrojs/cloudflare';
 import dotenv from "dotenv";
 
 dotenv.config();
 
 export default defineConfig({
-  adapter: cloudflare(),
-  site: process.env.SITE || "https://astro-paper-sanity.vercel.app",
+  output: "static",
+  site: process.env.SITE || "https://astro-paper-sanity.pages.dev",
   integrations: [react(), sitemap()],
   vite: {
     resolve: {

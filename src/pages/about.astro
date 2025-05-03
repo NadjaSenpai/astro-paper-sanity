@@ -1,14 +1,9 @@
 ---
-// src/pages/about.astro
-
-// 1) SSG を有効化
-export const prerender = true;
-
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Layout from "@/layouts/Layout.astro";
 import Main from "@/layouts/Main.astro";
-import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
+import PortableTextRendererClient from "@/components/PortableTextRendererClient";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getPageBySlug } from "@/lib/sanity/api/page";
@@ -16,69 +11,17 @@ import { getPageBySlug } from "@/lib/sanity/api/page";
 const site = await getSiteConfig();
 const page = await getPageBySlug("about");
 if (!page) throw new Error("Aboutページが見つかりませんでした");
----
 
+// SSG なので prerender を false にせず、完全静的化
+---
 <Layout title={`About | ${site.title}`}>
   <Header />
   <Main pageTitle="About" pageDesc="">
-    {/* 2) 完全に静的な HTML をここで生成 */}
-    <PortableTextRendererSSR
+    <PortableTextRendererClient
+      client:load
       value={cleansePortableText(page.content)}
-      embedMap={{}}
       headingLink={false}
     />
   </Main>
   <Footer />
-
-  {/* 3) クライアントで動くモーダル制御スクリプトを静的に埋め込む */}
-  <script is:inline>
-    document.addEventListener("DOMContentLoaded", () => {
-      document
-        .querySelectorAll('figure.not-prose img[data-full-src]')
-        .forEach((img) => {
-          img.style.cursor = "pointer";
-          img.addEventListener("click", () => {
-            const existing = document.getElementById("image-modal-overlay");
-            if (existing) {
-              existing.remove();
-              return;
-            }
-            const overlay = document.createElement("div");
-            overlay.id = "image-modal-overlay";
-            Object.assign(overlay.style, {
-              position: "fixed",
-              inset: "0",
-              background: "rgba(0,0,0,0.5)",
-              backdropFilter: "blur(4px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: "9999",
-              opacity: "0",
-              transition: "opacity 200ms ease",
-              cursor: "pointer",
-            });
-            const modalImg = document.createElement("img");
-            modalImg.src = img.dataset.fullSrc;
-            Object.assign(modalImg.style, {
-              maxWidth: "90vw",
-              maxHeight: "90vh",
-              transform: "scale(0.95)",
-              transition: "transform 200ms ease",
-            });
-            overlay.appendChild(modalImg);
-            document.body.appendChild(overlay);
-            requestAnimationFrame(() => {
-              overlay.style.opacity = "1";
-              modalImg.style.transform = "scale(1)";
-            });
-            overlay.addEventListener("click", () => {
-              overlay.style.opacity = "0";
-              modalImg.style.transform = "scale(0.95)";
-              setTimeout(() => overlay.remove(), 200);
-            });
-          });
-        });
-    });
-  </script>
 </Layout>

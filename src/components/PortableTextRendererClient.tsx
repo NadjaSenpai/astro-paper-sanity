@@ -1,29 +1,20 @@
+// src/components/PortableTextRendererClient.tsx
 "use client";
 
 import { ReactElement } from "react";
 import { PortableText } from "@portabletext/react";
-import { createPortableTextComponents } from "@/components/PortableTextComponents";
+import { createPortableTextComponents } from "./PortableTextComponents";
 
 interface Props {
   value: any[];
-  headingLink?: boolean;
-  embedMap: Record<string, any>;
 }
 
-export default function PortableTextRendererClient({
-  value,
-  headingLink = true,
-  embedMap,
-}: Props): ReactElement {
+export default function PortableTextRendererClient({ value }: Props): ReactElement {
   return (
     <div className="prose dark:prose-invert max-w-none">
       <PortableText
         value={value}
-        components={createPortableTextComponents({
-          headingLink,
-          isSSR: false,
-          embedMap,
-        })}
+        components={createPortableTextComponents()}
       />
     </div>
   );

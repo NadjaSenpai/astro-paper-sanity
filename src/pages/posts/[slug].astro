@@ -1,45 +1,28 @@
 ---
-// src/pages/posts/[slug].astro
-
-export const prerender = false; // ISR のままにしたい場合は false、SSGしたい場合は true
-
-import PostDetails from "@/layouts/PostDetails.astro";
 import Layout from "@/layouts/Layout.astro";
+import PostDetails from "@/layouts/PostDetails.astro";
 import { getSiteConfig } from "@/lib/getSiteConfig";
-import { getPostBySlug } from "@/lib/sanity/api/posts";
-import { getPosts } from "@/lib/sanity";
+import { getPosts, getPostBySlug } from "@/lib/sanity/api/posts";
 import getSortedPosts from "@/utils/getSortedPosts";
-import type { Post } from "@/lib/sanity/api/types/post";
-import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
-import { extractLinks } from "@/lib/sanity/utils/extractLinks";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
-import { fetchEmbed } from "@/lib/fetchEmbed";
+import PortableTextRendererClient from "@/components/PortableTextRendererClient";
 
 export async function getStaticPaths() {
   const posts = await getPosts();
-  return posts.map((p) => ({ params: { slug: p.slug.current } }));
+  return posts.map((p) => ({
+    params: { slug: p.slug.current },
+  }));
 }
 
 const { slug } = Astro.params;
-const post: Post | null = await getPostBySlug(slug);
-if (!post) throw new Error(`❌ 投稿が見つかりません: ${slug}`);
+const post = await getPostBySlug(slug);
+if (!post) {
+  throw new Error(`投稿が見つかりません: ${slug}`);
+}
 
-// 全ポストを取得してソート済みリストを用意
-const allPosts: Post[] = await getPosts();
+const allPosts = await getPosts();
 const sortedPosts = getSortedPosts(allPosts);
-
-// ポータブルテキストは必ず配列化
-const contentBlocks = cleansePortableText(post.content);
-
-// 埋め込みリンクを抽出してフェッチ
-const links = extractLinks(contentBlocks);
-const embedMap: Record<string, unknown> = {};
-await Promise.all(
-  links.map(async (url) => {
-    const e = await fetchEmbed(url);
-    if (e) embedMap[url] = e;
-  })
-);
+const blocks = cleansePortableText(post.content);
 
 const site = await getSiteConfig();
 ---
@@ -51,71 +34,10 @@ const site = await getSiteConfig();
   modDate={post.modDate}
   ogImage={`/og/${post.slug.current}.png`}
 >
-  <PostDetails
-    post={post}
-    embedMap={embedMap}
-    posts={allPosts}
-    sortedPosts={sortedPosts}
-  >
-    <article class="mx-auto prose mt-8 max-w-3xl">
-      <!-- prose の外に逃がす -->
-      <div class="not-prose">
-      <!-- 完全 SSR 版だけを使う -->
-        <PortableTextRendererSSR
-          value={contentBlocks}
-          embedMap={embedMap}
-        />
-      </div>
+  <PostDetails post={post} posts={allPosts} sortedPosts={sortedPosts}>
+    <article class="mx-auto prose mt-8 max-w-3xl not-prose">
+      <!-- SSG 向け：埋め込みも画像モーダルもクライアントサイドで制御 -->
+      <PortableTextRendererClient client:load value={blocks} />
     </article>
   </PostDetails>
-
-  <!-- ここから純インライン JS でモーダル＆Copyボタン制御 -->
-  <script is:inline>
-  document.addEventListener("DOMContentLoaded", () => {
-    // ===== 画像クリックでモーダル表示 =====
-    document
-      .querySelectorAll('figure.not-prose img[data-full-src]')
-      .forEach((img) => {
-        img.style.cursor = "pointer";
-        img.addEventListener("click", () => {
-          const existing = document.getElementById("image-modal-overlay");
-          if (existing) { existing.remove(); return; }
-          const overlay = document.createElement("div");
-          overlay.id = "image-modal-overlay";
-          Object.assign(overlay.style, {
-            position: "fixed",
-            inset: "0",
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: "9999",
-            opacity: "0",
-            transition: "opacity 200ms ease",
-            cursor: "pointer",
-          });
-          const modalImg = document.createElement("img");
-          modalImg.src = img.dataset.fullSrc;
-          Object.assign(modalImg.style, {
-            maxWidth: "90vw",
-            maxHeight: "90vh",
-            transform: "scale(0.95)",
-            transition: "transform 200ms ease",
-          });
-          overlay.appendChild(modalImg);
-          document.body.appendChild(overlay);
-          requestAnimationFrame(() => {
-            overlay.style.opacity = "1";
-            modalImg.style.transform = "scale(1)";
-          });
-          overlay.addEventListener("click", () => {
-            overlay.style.opacity = "0";
-            modalImg.style.transform = "scale(0.95)";
-            setTimeout(() => overlay.remove(), 200);
-          });
-        });
-      });
-  });
-  </script>
 </Layout>

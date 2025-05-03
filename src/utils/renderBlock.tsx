@@ -1,33 +1,25 @@
-import type { ReactNode, ReactElement } from "react";
+import type { ReactElement } from "react";
 import type { PortableTextComponentProps } from "@portabletext/react";
-import type { EmbedData } from "@/components/SmartLink";
-import SmartLinkClient from "@/components/SmartLink";
-import SmartLinkSSR from "@/components/SmartLinkSSR";
+import SmartLink from "@/components/SmartLink";
 
 interface CustomBlockProps extends PortableTextComponentProps<any> {
   headingLink?: boolean;
-  children?: ReactNode;
-  isSSR?: boolean;
-  embedMap?: Record<string, EmbedData>;
 }
 
 export function renderBlock(props: CustomBlockProps): ReactElement {
-  const { value, children, headingLink, isSSR = false, embedMap = {} } = props;
+  const { value, children, headingLink } = props;
 
+  // プレーンURLだけの行は常にクライアント版 SmartLink へ
   if (
     value._type === "block" &&
     value.children?.length === 1 &&
-    value.children[0]?._type === "span" &&
+    value.children[0]._type === "span" &&
     typeof value.children[0].text === "string" &&
     value.children[0].text.trim().match(/^https?:\/\/[^\s]+$/) &&
     (value.children[0].marks?.length ?? 0) === 0
   ) {
     const url = value.children[0].text.trim();
-    return isSSR ? (
-      <SmartLinkSSR url={url} embed={embedMap[url] ?? null} />
-    ) : (
-      <SmartLinkClient url={url} />
-    );
+    return <SmartLink url={url} />;
   }
 
   const Tag =

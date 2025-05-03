@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import { generateOgImageForSite } from "@/utils/generateOgImages";
 
-export const prerender = false; // ← これを必ず false に！
 
 export const GET: APIRoute = async () => {
   const { createClient } = await import("@sanity/client");

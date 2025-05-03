@@ -9,7 +9,6 @@ import Card from "@/components/Card.astro";
 import Pagination from "@/components/Pagination.astro";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 
-export const prerender = true;
 
 export async function getStaticPaths() {
   const site = await getSiteConfig();

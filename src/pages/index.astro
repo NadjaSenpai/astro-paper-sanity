@@ -7,41 +7,39 @@ import Socials from "@/components/Socials.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
 import Hr from "@/components/Hr.astro";
-import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getSocialLinks } from "@/constants";
-import PortableTextRenderer from "@/components/PortableTextRenderer.tsx";
+import PortableTextRendererClient from "@/components/PortableTextRendererClient";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
 
 const site = await getSiteConfig();
 const SOCIALS = getSocialLinks(site);
 
-// 投稿取得・pubDateが有効なものだけ抽出・Date型に変換
 const allPosts = (await getPosts())
-  .filter(post => {
-    const isValid = !!post?.pubDate && !isNaN(new Date(post.pubDate).getTime());
-    if (!isValid) {
-      console.warn("⚠️ Skipped post with invalid pubDate:", post?.title, post?.pubDate);
-    }
-    return isValid;
+  .filter((post) => {
+    const d = new Date(post.pubDate);
+    return post.pubDate && !isNaN(d.getTime());
   })
-  .map(post => ({
+  .map((post) => ({
     ...post,
     pubDate: new Date(post.pubDate),
     modDate: post.modDate ? new Date(post.modDate) : undefined,
   }));
 
-const featuredPosts = allPosts.filter(post => post.featured);
-const recentPosts = allPosts.filter(post => !post.featured);
+const featuredPosts = allPosts.filter((post) => post.featured);
+const recentPosts  = allPosts.filter((post) => !post.featured);
 ---
-
 <Layout>
   <Header />
   <main id="main-content" data-layout="index">
     <section id="hero" class="pt-8 pb-6">
       <div>
-        <PortableTextRenderer client:load value={cleansePortableText(site.message)} headingLink={false} />
+        <PortableTextRendererClient
+          client:load
+          value={cleansePortableText(site.message)}
+          headingLink={false}
+        />
       </div>
 
       {SOCIALS.length > 0 && (
@@ -72,9 +70,11 @@ const recentPosts = allPosts.filter(post => !post.featured);
       <section id="recent-posts" class="pt-12 pb-6">
         <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
         <ul class="space-y-6">
-          {recentPosts.slice(0, site.postPerIndex ?? 4).map((post) => (
-            <Card {...post} variant="h3" />
-          ))}
+          {recentPosts
+            .slice(0, site.postPerIndex ?? 4)
+            .map((post) => (
+              <Card {...post} variant="h3" />
+            ))}
         </ul>
       </section>
     )}
@@ -89,11 +89,9 @@ const recentPosts = allPosts.filter(post => !post.featured);
   <Footer />
 </Layout>
 
-<script>
+<script is:inline>
+  // ページから戻ってきたときのセッション保存
   document.addEventListener("astro:page-load", () => {
-    const indexLayout = (document.querySelector("#main-content"))?.dataset?.layout;
-    if (indexLayout) {
-      sessionStorage.setItem("backUrl", "/");
-    }
+    sessionStorage.setItem("backUrl", "/");
   });
 </script>

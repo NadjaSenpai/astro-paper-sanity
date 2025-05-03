@@ -17,57 +17,82 @@ interface Props {
 
 export default function SmartLink({ url }: Props) {
   const [data, setData] = useState<EmbedData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const isTwitter = url.includes("twitter.com") || url.includes("x.com");
+  const isTwitter = /(twitter|x)\.com/.test(url);
   const isMedia = /youtube\.com|youtu\.be|vimeo\.com/.test(url);
 
   useEffect(() => {
-    const fetchEmbed = async () => {
-      const origin = window.location.origin;
-      const params = new URLSearchParams({ url });
-      if (isTwitter) params.set("theme", "dark");
+    let cancelled = false;
 
-      const endpoint = `${origin}/api/fetch-embed?${params.toString()}`;
-      console.log("[SmartLink] fetching", endpoint);
-
+    async function fetchEmbed() {
       try {
-        const res = await fetch(endpoint, { credentials: "same-origin" });
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        const json = await res.json();
-        if ((json.type === "oembed" && json.html) || json.type === "ogp") {
-          setData(json as EmbedData);
+        // クエリパラメータを組み立て
+        const params = new URLSearchParams({ url });
+        if (isTwitter) params.set("theme", "dark");
 
-          // ← Twitter 埋め込み用 widget.js の読み込み
-          if (
-            json.type === "oembed" &&
-            isTwitter &&
-            !document.querySelector('script[src*="platform.twitter.com/widgets.js"]')
-          ) {
-            const script = document.createElement("script");
-            script.src = "https://platform.twitter.com/widgets.js";
-            script.async = true;
-            document.body.appendChild(script);
+        // 相対パスのみで fetch
+        const endpoint = `/api/fetch-embed?${params.toString()}`;
+        console.log("[SmartLink] fetching", endpoint);
+
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error(`Fetch Error: ${res.status}`);
+        const json = await res.json();
+
+        if (!cancelled) {
+          if ((json.type === "oembed" && json.html) || json.type === "ogp") {
+            json.html && (json.html = json.html.trim());
+            setData(json as EmbedData);
+
+            if (
+              json.type === "oembed" &&
+              isTwitter &&
+              !document.querySelector('script[src*="platform.twitter.com/widgets.js"]')
+            ) {
+              const s = document.createElement("script");
+              s.src = "https://platform.twitter.com/widgets.js";
+              s.async = true;
+              document.body.appendChild(s);
+            }
+          } else {
+            setError("Unsupported embed type");
           }
         }
-      } catch (err) {
-        console.error("SmartLink fetch error", err);
-        setData(null);
+      } catch (e: any) {
+        if (!cancelled) {
+          console.error("SmartLink fetch error", e);
+          setError(e.message);
+        }
       }
-    };
+    }
 
     fetchEmbed();
+    return () => {
+      cancelled = true;
+    };
   }, [url, isTwitter]);
 
-  // oEmbed
-  if (data?.type === "oembed" && data.html) {
+  // エラー or ロード中
+  if (error) {
     return (
-      <>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline block mb-2"
-        >
+      <a href={url} target="_blank" rel="noopener noreferrer" className="underline text-red-500">
+        {url} (embed error)
+      </a>
+    );
+  }
+  if (!data) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className="underline opacity-50">
+        {url}
+      </a>
+    );
+  }
+
+  // oEmbed
+  if (data.type === "oembed" && data.html) {
+    return (
+      <figure className="my-4">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="underline block mb-2">
           {url}
         </a>
         <div
@@ -78,48 +103,36 @@ export default function SmartLink({ url }: Props) {
           }
           dangerouslySetInnerHTML={{ __html: data.html }}
         />
-      </>
+      </figure>
     );
   }
 
   // OGP
-  if (data?.type === "ogp") {
-    return (
-      <>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline block mb-2"
-        >
-          {url}
-        </a>
-        <a
-          href={data.url || url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block my-4 max-w-3xl rounded border bg-muted/20 p-4 hover:bg-muted/40 transition"
-        >
-          {data.image && (
-            <img
-              src={data.image}
-              alt={data.title}
-              className="mb-2 w-full object-cover rounded"
-            />
-          )}
-          <div className="text-lg font-semibold">{data.title}</div>
+  return (
+    <figure className="my-4 max-w-3xl">
+      <a href={url} target="_blank" rel="noopener noreferrer" className="underline block mb-2">
+        {url}
+      </a>
+      <a
+        href={data.url || url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block overflow-hidden rounded border bg-muted/20 p-4 hover:bg-muted/40 transition"
+      >
+        {data.image && (
+          <img
+            src={data.image}
+            alt={data.title || url}
+            className="mb-2 w-full object-cover rounded"
+          />
+        )}
+        <h3 className="text-lg font-semibold">{data.title}</h3>
+        {data.description && (
           <p className="mt-1 text-sm text-foreground/70 line-clamp-2">
             {data.description}
           </p>
-        </a>
-      </>
-    );
-  }
-
-  // フォールバック
-  return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="underline">
-      {url}
-    </a>
+        )}
+      </a>
+    </figure>
   );
 }
