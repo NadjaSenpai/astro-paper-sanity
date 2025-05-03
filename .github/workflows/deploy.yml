@@ -32,13 +32,10 @@ jobs:
           file: Dockerfile
           builder: default
           platforms: linux/amd64
-          push: false                   # イメージはレジストリに push しない
-          cache-from:                   # キャッシュ取得元
-            - type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
-          cache-to:                     # キャッシュ書き戻し先
-            - type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
-          outputs:                      # ローカルに成果物を取り出す
-            - type=local,dest=./_cache_output
+          push: false
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+          outputs: type=local,dest=./_cache_output
 
       - name: Extract build output
         run: |
