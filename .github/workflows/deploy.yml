@@ -57,7 +57,7 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         run: |
-          wrangler pages deploy ./dist \
+          wrangler pages publish ./dist \
             --project-name astro-paper-sanity \
             --branch main \
             --functions ./functions/api
