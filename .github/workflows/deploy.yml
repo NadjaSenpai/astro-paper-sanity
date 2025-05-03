@@ -33,7 +33,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          builder: default
+          builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
