@@ -11,12 +11,12 @@ export default defineConfig({
   output: "server",
   adapter: vercel({
     isr: {
-      expiration: 60 * 60 * 24,
+      expiration: 86400,
       bypassToken: process.env.BYPASS_TOKEN,
       exclude: [],
-    }
+    },
   }),
-  site: "https://astro-paper-sanity.vercel.app",
+  site: process.env.SITE || "https://astro-paper-sanity.vercel.app",
   integrations: [react(), sitemap()],
   vite: {
     resolve: {
