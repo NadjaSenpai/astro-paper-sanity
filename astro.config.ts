@@ -8,6 +8,7 @@ dotenv.config();
 
 export default defineConfig({
   output: "static",
+  outDir: "./dist",
   site: process.env.SITE || "https://astro-paper-sanity.pages.dev",
   integrations: [react(), sitemap()],
   vite: {

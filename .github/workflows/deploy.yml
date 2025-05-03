@@ -40,12 +40,17 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/nadjasenpai/astro-paper-sanity:buildcache,mode=max
           outputs: type=local,dest=./_cache_output
 
+      - name: Debug output
+        run: |
+          echo "🗂 Listing _cache_output:"
+          find _cache_output
+          
       - name: Extract build output
         run: |
           mkdir -p dist
           mkdir -p functions/api
-          cp -r _cache_output/dist/* dist/
-          cp -r _cache_output/functions/api/* functions/api/
+          cp -r _cache_output/dist/* dist/ || echo "⚠️ dist not found"
+          cp -r _cache_output/functions/api/* functions/api/ || echo "⚠️ functions/api not found"
 
       - name: Install Wrangler
         run: npm install -g wrangler@3
