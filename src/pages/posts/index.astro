@@ -1,33 +1,36 @@
 ---
-import { Astro } from 'astro';
+// src/pages/index.astro
 
-// SSR（astro dev / adapter 経由）時に 302 レスポンスを返す
-// SSG ビルド（output: "static"）時は無視されて、下部の HTML が出力される
+// SSR (astro dev / adapter) 時はサーバーサイドで 302 を返す
 export function get({ redirect }) {
-  // ここでサーバー側 302 を返してしまう
-  return redirect('/posts/page/1', 302);
+  return redirect("/posts/page/1", 302);
 }
 
-// SSG 時には静的 HTML を吐くので、prerender は外しておくか true
+// SSG として静的 HTML を吐く
 export const prerender = true;
 
-const target = '/posts/page/1';
+// クライアント用 URL
+const target = "/posts/page/1";
 ---
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
     <title>Redirecting…</title>
-    <!-- SSG 出力時に即座にクライアントリダイレクト -->
+
+    <!-- メタリフレッシュ（SSG 時） -->
     <meta http-equiv="refresh" content={`0;url=${target}`} />
-    <script>
-      // JS が先に動けば一瞬で飛ぶ
-      window.location.replace("{target}");
+
+    <!-- JS フォールバック（SSG 時） -->
+    <script is:inline>
+      {`window.location.replace("${target}");`}
     </script>
   </head>
   <body>
     <p>
-      Redirecting… <a href={target}>click here</a> if you’re not automatically redirected.
+      Redirecting…  
+      <a href={target}>click here</a> if you’re not automatically redirected.
     </p>
   </body>
 </html>

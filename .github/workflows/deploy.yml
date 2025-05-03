@@ -1,0 +1,62 @@
+name: 🚀 Deploy to Cloudflare Pages (Docker Cache)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU (for Buildx)
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build with Docker & cache
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          builder: default
+          platforms: linux/amd64
+          push: false                   # イメージはレジストリに push しない
+          cache-from:                   # キャッシュ取得元
+            - type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+          cache-to:                     # キャッシュ書き戻し先
+            - type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+          outputs:                      # ローカルに成果物を取り出す
+            - type=local,dest=./_cache_output
+
+      - name: Extract build output
+        run: |
+          IMAGE_ID=$(docker buildx imagetools inspect --raw . | jq -r '.manifests[0].digest')
+          docker pull $IMAGE_ID
+          CONTAINER=$(docker create $IMAGE_ID)
+          docker cp $CONTAINER:/app/dist ./dist
+          docker cp $CONTAINER:/app/functions/api ./functions/api
+          docker rm $CONTAINER
+
+      - name: Install Wrangler
+        run: npm install -g wrangler@3
+
+      - name: Deploy to Cloudflare Pages
+        run: |
+          wrangler pages deploy ./dist \
+            --project-name ${{ secrets.CF_PAGES_PROJECT }} \
+            --branch main \
+            --functions ./functions/api
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

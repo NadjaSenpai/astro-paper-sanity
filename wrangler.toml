@@ -1,9 +1,12 @@
 # wrangler.toml
 name = "astro-paper-sanity"
 compatibility_date = "2025-05-03"
+account_id = "6c09e3bab91aa41c1bcb2f22c6dcf9cd"
+type="javascript"
 
-# ─── 静的サイトの出力先を指定 ───
-site = { bucket = "./dist" }
+[site]
+  bucket = "./dist"
+  entry-point = "."
 
-# ─── Pages Functions の置き場所を指定 ───
-functions = "./functions"
+[functions]
+  directory = "./functions/api"
