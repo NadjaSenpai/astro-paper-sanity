@@ -1,6 +1,6 @@
 // src/components/CodeBlockSSR.tsx
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import vscDarkPlus from "react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus";
+import vscDarkPlus from "react-syntax-highlighter/dist/cjs/styles/prism/vsc-dark-plus";
 
 interface CodeBlockSSRProps {
   code: string;
@@ -9,18 +9,12 @@ interface CodeBlockSSRProps {
 
 export default function CodeBlockSSR({ code, language }: CodeBlockSSRProps) {
   return (
-    <pre className="code-block-wrapper my-4 not-prose">
+    <pre className="code-block-wrapper my-4 not-prose bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
       <SyntaxHighlighter
         language={language ?? "plaintext"}
         style={vscDarkPlus}
         showLineNumbers
         wrapLongLines
-        customStyle={{
-          background: "transparent",
-          border: "none",
-          margin: 0,
-          // ── color は指定しない！
-        }}
       >
         {code}
       </SyntaxHighlighter>

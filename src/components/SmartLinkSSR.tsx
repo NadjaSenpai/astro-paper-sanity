@@ -1,4 +1,6 @@
 // ✅ SmartLinkSSR.tsx（SSR専用・useEffectなし）
+"use client";
+
 import type { EmbedData } from "@/components/SmartLink";
 
 interface Props {

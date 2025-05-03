@@ -1,4 +1,3 @@
-// src/components/PortableTextComponents.tsx
 import CodeBlock from "@/components/CodeBlock";
 import CodeBlockSSR from "@/components/CodeBlockSSR";
 import ImageWithModal from "@/components/ImageWithModal";
@@ -22,19 +21,26 @@ export function createPortableTextComponents({
   return {
     types: {
       code: (props: any) => {
-        // props.value = { code: string; language?: string }
         const { code, language } = props.value as { code: string; language?: string };
-        return isSSR ? (
-          <CodeBlockSSR code={code} language={language} />
-        ) : (
-          <CodeBlock value={props.value} />
-        );
+        return isSSR
+          ? <CodeBlockSSR code={code} language={language} />
+          : <CodeBlock value={{ code, language }} />;
       },
       image: (props: any) => <ImageWithModal value={props.value} />,
       youtube: (props: any) => renderYouTube({ value: props.value }),
     },
     marks: renderMarks,
-    block: (props: PortableTextComponentProps<any>) =>
-      renderBlock({ ...props, headingLink, isSSR, embedMap }),
+    // ← ここをオブジェクトに！
+    block: {
+      // 通常の段落 & URL スマートリンクもここで拾う
+      normal: (props: PortableTextComponentProps<any>) =>
+        renderBlock({ ...props, headingLink, isSSR, embedMap }),
+      // 見出しも全部 renderBlock に投げるなら…
+      h1: (props: PortableTextComponentProps<any>) => renderBlock({ ...props, headingLink, isSSR, embedMap }),
+      h2: (props: PortableTextComponentProps<any>) => renderBlock({ ...props, headingLink, isSSR, embedMap }),
+      h3: (props: PortableTextComponentProps<any>) => renderBlock({ ...props, headingLink, isSSR, embedMap }),
+      h4: (props: PortableTextComponentProps<any>) => renderBlock({ ...props, headingLink, isSSR, embedMap }),
+      blockquote: (props: PortableTextComponentProps<any>) => renderBlock({ ...props, headingLink, isSSR, embedMap }),
+    },
   };
 }

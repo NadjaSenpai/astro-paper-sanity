@@ -1,72 +1,63 @@
-// src/components/CodeBlock.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { useState, lazy, Suspense } from "react";
 
 interface CodeBlockProps {
   value: { code: string; language?: string };
 }
 
+// Prism とスタイルを動的読み込み
+const LazyHighlighter = lazy(async () => {
+  const mod = await import("react-syntax-highlighter");
+  const styleMod = await import(
+    "react-syntax-highlighter/dist/esm/styles/prism/material-light"
+  );
+  return {
+    default: (props: any) => (
+      <mod.Prism
+        // Prism 側の枠線を消す
+        customStyle={{ border: "none", backgroundColor: "transparent" }}
+        style={styleMod.default}
+        {...props}
+      />
+    ),
+  };
+});
+
 export default function CodeBlock({ value }: CodeBlockProps) {
-  const [theme, setTheme] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
 
-  // 1) クライアントマウント後に ESM 版テーマを動的 import
-  useEffect(() => {
-    import("react-syntax-highlighter/dist/esm/styles/prism/darcula")
-      .then((mod) => setTheme(mod.default))
-      .catch(() => {
-        // フォールバック
-        import("react-syntax-highlighter/dist/esm/styles/prism/tomorrow")
-          .then((m2) => setTheme(m2.default));
-      });
-  }, []);
-
-  // 2) Copyボタン付与
-  useEffect(() => {
-    const blocks = Array.from(document.querySelectorAll("pre.code-block-wrapper"));
-    for (const pre of blocks) {
-      if (pre.querySelector(".copy-code")) continue;
-      pre.classList.add("relative");
-      const btn = document.createElement("button");
-      btn.className =
-        "copy-code absolute right-3 top-2 z-10 rounded bg-muted px-2 py-1 text-xs font-medium text-foreground";
-      btn.innerText = "Copy";
-      pre.appendChild(btn);
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const codeEl = pre.querySelector("code");
-        if (!codeEl) return;
-        const clone = codeEl.cloneNode(true) as HTMLElement;
-        clone
-          .querySelectorAll('span[class*="line-number"]')
-          .forEach((el) => el.remove());
-        let text = (clone.textContent || "").replace(/^\n+|\n+$/g, "");
-        text = text
-          .split("\n")
-          .map((line) => line.replace(/^\d+\s/, ""))
-          .join("\n");
-        await navigator.clipboard.writeText(text);
-        btn.innerText = "Copied!";
-        setTimeout(() => (btn.innerText = "Copy"), 700);
-      });
-    }
-  }, []);
-
-  // テーマが読み込まれるまで何もレンダリングしない
-  if (!theme) return null;
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1000);
+  };
 
   return (
-    <pre className="code-block-wrapper my-4 not-prose bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
-      <SyntaxHighlighter
-        language={value.language ?? "plaintext"}
-        style={theme}
-        showLineNumbers
-        wrapLongLines
-        customStyle={{ background: "transparent", border: "none", margin: 0 }}
-      >
-        {value.code}
-      </SyntaxHighlighter>
-    </pre>
+    <Suspense
+      fallback={
+        <div className="my-4 rounded-lg bg-gray-200 dark:bg-gray-900 p-4">
+          Loading…
+        </div>
+      }
+    >
+      <div className="relative my-4 rounded-lg border border-border bg-gray-200 dark:bg-gray-900 group">
+        {/* Copy ボタン */}
+        <button
+          onClick={handleCopy}
+          className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3 z-10 rounded bg-muted px-2 py-1 text-xs font-medium text-foreground"
+        >
+          {copied ? "Copied!" : "Copy"}
+        </button>
+
+        <LazyHighlighter
+          language={value.language ?? "plaintext"}
+          showLineNumbers
+          wrapLongLines
+        >
+          {value.code}
+        </LazyHighlighter>
+      </div>
+    </Suspense>
   );
 }

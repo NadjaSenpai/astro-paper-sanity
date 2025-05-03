@@ -1,6 +1,4 @@
 ---
-// src/layouts/PostDetails.astro
-
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Layout from "@/layouts/Layout.astro";
@@ -14,8 +12,6 @@ import slugify from "@/utils/slugify";
 import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getShareLinks } from "@/constants";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
-import { ClientOnly } from "astro/components";
-import PortableTextRendererSSR from "@/components/PortableTextRendererSSR";
 import PortableTextRendererClient from "@/components/PortableTextRendererClient";
 
 const site = await getSiteConfig();
@@ -23,29 +19,21 @@ const SHARE_LINKS = getShareLinks(site);
 
 const { post, embedMap, posts, sortedPosts } = Astro.props;
 const { title, content, pubDate, modDate, tags } = post;
-// tags が null のときは [] にフォールバック
 const safeTags = Array.isArray(tags) ? tags : [];
 
 const safeSlug =
-  typeof post.slug === "string"
-    ? post.slug
-    : post.slug?.current ?? "";
-
-const allPosts = Array.isArray(posts)
-  ? posts.map((p) => ({
-      slug:
-        typeof p.slug === "string"
-          ? p.slug
-          : p.slug?.current ?? "",
+  typeof post.slug === "string" ? post.slug : post.slug?.current ?? "";
+const allPosts = Array.isArray(sortedPosts)
+  ? sortedPosts.map((p) => ({
+      slug: typeof p.slug === "string" ? p.slug : p.slug?.current ?? "",
       title: p.title,
     }))
   : [];
-
 const idx = allPosts.findIndex((p) => p.slug === safeSlug);
 const prev = idx > 0 ? allPosts[idx - 1] : null;
 const next = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
 
-const blocks = cleansePortableText(post.content);
+const blocks = cleansePortableText(content);
 ---
 
 <Layout>
@@ -54,16 +42,10 @@ const blocks = cleansePortableText(post.content);
 
   <main
     id="main-content"
-    class:list={[
-      "mx-auto w-full max-w-3xl px-4 pb-12",
-      { "mt-8": !site.showBackButton },
-    ]}
+    class:list={[ "mx-auto w-full max-w-3xl px-4 pb-12", { "mt-8": !site.showBackButton } ]}
     data-pagefind-body
   >
-    <h1
-      transition:name={slugify(title)}
-      class="inline-block text-2xl font-bold text-accent sm:text-3xl"
-    >
+    <h1 transition:name={slugify(title)} class="inline-block text-2xl font-bold text-accent sm:text-3xl">
       {title}
     </h1>
 
@@ -72,7 +54,7 @@ const blocks = cleansePortableText(post.content);
     </div>
 
     <article class="mx-auto prose mt-8 max-w-3xl not-prose">
-      <!-- クライアントマウント後にだけレンダリング -->
+      <!-- クライアントロードで hydrate -->
       <PortableTextRendererClient
         client:load
         value={blocks}
@@ -81,15 +63,10 @@ const blocks = cleansePortableText(post.content);
       />
     </article>
 
-    <!-- 末尾にインライン JS 追加 -->
-
     {safeTags.length > 0 && (
       <ul class="mt-6 flex flex-wrap gap-3">
         {safeTags.map((t) => (
-          <Tag
-            tag={slugify(t.slug?.current ?? t.title)}
-            tagName={t.title}
-          />
+          <Tag tag={slugify(t.slug?.current ?? t.title)} tagName={t.title} />
         ))}
       </ul>
     )}
@@ -98,10 +75,7 @@ const blocks = cleansePortableText(post.content);
 
     <div class="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-end sm:gap-4">
       <ShareLinks shareLinks={SHARE_LINKS} />
-      <button
-        id="back-to-top"
-        class="focus-outline py-1 whitespace-nowrap hover:opacity-75"
-      >
+      <button id="back-to-top" class="focus-outline py-1 whitespace-nowrap hover:opacity-75">
         <IconChevronLeft class="inline-block rotate-90" />
         <span>Back to Top</span>
       </button>
@@ -120,10 +94,7 @@ const blocks = cleansePortableText(post.content);
         </a>
       )}
       {next && (
-        <a
-          href={`/posts/${next.slug}`}
-          class="flex w-full justify-end gap-1 text-right hover:opacity-75 sm:col-start-2"
-        >
+        <a href={`/posts/${next.slug}`} class="flex w-full justify-end gap-1 text-right hover:opacity-75 sm:col-start-2">
           <div>
             <span>Next Post</span>
             <div class="text-sm text-accent/85">{next.title}</div>
@@ -133,5 +104,6 @@ const blocks = cleansePortableText(post.content);
       )}
     </div>
   </main>
+
   <Footer />
 </Layout>
