@@ -5,7 +5,15 @@ import type { APIRoute } from "astro";
 import { parse } from "node-html-parser";
 
 export const GET: APIRoute = async ({ request }) => {
-  const urlObj = new URL(request.url);
+  // ─── ベース URL を決める ───
+  // 開発 (astro dev) 時は localhost:3000、それ以外はヘッダーから組み立て
+  const dev = import.meta.env.DEV;
+  const base = dev
+    ? "http://localhost:3000"
+    : `${request.headers.get("x-forwarded-proto") ?? "https"}://${request.headers.get("host")}`;
+
+  // request.url は絶対パス or クエリ付きパスなので、base を添えて new URL
+  const urlObj = new URL(request.url, base);
   const rawUrl = urlObj.searchParams.get("url");
   const theme  = urlObj.searchParams.get("theme") ?? "dark";
 
@@ -24,26 +32,36 @@ export const GET: APIRoute = async ({ request }) => {
 
   // ─── YouTube ───
   if (/youtu\.be\/|youtube\.com\/watch/.test(rawUrl)) {
-    const match = rawUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/);
-    const id = match?.[1];
-    if (id) {
-      const html = `
-        <div class="relative w-full aspect-video my-4">
-          <iframe
-            class="absolute inset-0 w-full h-full"
-            src="https://www.youtube.com/embed/${id}"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          ></iframe>
-        </div>`;
-      return new Response(JSON.stringify({ type: "oembed", html }), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store, max-age=0",
-        },
-      });
+    try {
+      const parsed = new URL(rawUrl);
+      let id: string | null = null;
+      if (parsed.hostname.includes("youtube.com")) {
+        id = parsed.searchParams.get("v");
+      }
+      if (!id && parsed.hostname.includes("youtu.be")) {
+        id = parsed.pathname.slice(1);
+      }
+      if (id) {
+        const html = `
+          <div class="relative w-full aspect-video my-4">
+            <iframe
+              class="absolute inset-0 w-full h-full"
+              src="https://www.youtube.com/embed/${id}"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>`;
+        return new Response(JSON.stringify({ type: "oembed", html }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store, max-age=0",
+          },
+        });
+      }
+    } catch {
+      // fallthrough
     }
   }
 
@@ -64,8 +82,8 @@ export const GET: APIRoute = async ({ request }) => {
           },
         });
       }
-    } catch (e) {
-      console.error("Twitter oEmbed failed:", e);
+    } catch {
+      // fallthrough
     }
   }
 
@@ -86,8 +104,8 @@ export const GET: APIRoute = async ({ request }) => {
           },
         });
       }
-    } catch (e) {
-      console.error("Vimeo oEmbed failed:", e);
+    } catch {
+      // fallthrough
     }
   }
 
@@ -106,8 +124,8 @@ export const GET: APIRoute = async ({ request }) => {
           },
         });
       }
-    } catch (e) {
-      console.error("SoundCloud oEmbed failed:", e);
+    } catch {
+      // fallthrough
     }
   }
 
@@ -157,13 +175,7 @@ export const GET: APIRoute = async ({ request }) => {
 
     if (title || image) {
       return new Response(
-        JSON.stringify({
-          type: "ogp",
-          title,
-          image,
-          description,
-          url: ogUrl,
-        }),
+        JSON.stringify({ type: "ogp", title, image, description, url: ogUrl }),
         {
           status: 200,
           headers: {
@@ -173,8 +185,8 @@ export const GET: APIRoute = async ({ request }) => {
         }
       );
     }
-  } catch (e) {
-    console.error("OGP fallback failed:", e);
+  } catch {
+    // fallthrough
   }
 
   // ─── 全フォールバック ───
