@@ -15,11 +15,17 @@ const providers = [
 ];
 
 export const GET: APIRoute = async ({ request }) => {
+  // まずは飛んできた URL 全体をログ出力
+  console.log("[fetch-embed] request.url:", request.url);
   const url = new URL(request.url);
+  // searchParams の中身も丸ごと出す
+  console.log("[fetch-embed] searchParams:", url.searchParams.toString());
+
   const rawUrl = url.searchParams.get("url");
   const theme  = url.searchParams.get("theme") ?? "dark";
 
   if (!rawUrl) {
+    console.warn("[fetch-embed] Missing url param");
     return new Response(
       JSON.stringify({
         error: true,
