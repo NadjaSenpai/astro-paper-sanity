@@ -13,11 +13,13 @@ import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getShareLinks } from "@/constants";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
 import PortableTextRendererClient from "@/components/PortableTextRendererClient";
+// ① fetchEmbed をインポート
+import { fetchEmbed } from "@/lib/fetchEmbed";
 
 const site = await getSiteConfig();
 const SHARE_LINKS = getShareLinks(site);
 
-const { post, embedMap, posts, sortedPosts } = Astro.props;
+const { post, posts, sortedPosts } = Astro.props;
 const { title, content, pubDate, modDate, tags } = post;
 const safeTags = Array.isArray(tags) ? tags : [];
 
@@ -33,7 +35,26 @@ const idx = allPosts.findIndex((p) => p.slug === safeSlug);
 const prev = idx > 0 ? allPosts[idx - 1] : null;
 const next = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
 
+// ② PortableText用のブロックを配列化
 const blocks = cleansePortableText(content);
+
+// ③ プレーンURLのみ抽出してプリフェッチ
+const urls = blocks
+  .filter(
+    (b) =>
+      b._type === "block" &&
+      Array.isArray(b.children) &&
+      b.children.length === 1 &&
+      typeof b.children[0].text === "string" &&
+      b.children[0].text.trim().match(/^https?:\/\/[^\s]+$/)
+  )
+  .map((b) => b.children[0].text.trim());
+
+// ④ 並列フェッチして Map に変換
+const entries = await Promise.all(
+  urls.map(async (u) => [u, await fetchEmbed(u)])
+);
+const embedMap = Object.fromEntries(entries as [string, any][]);
 ---
 
 <Layout>
@@ -42,10 +63,16 @@ const blocks = cleansePortableText(content);
 
   <main
     id="main-content"
-    class:list={[ "mx-auto w-full max-w-3xl px-4 pb-12", { "mt-8": !site.showBackButton } ]}
+    class:list={[
+      "mx-auto w-full max-w-3xl px-4 pb-12",
+      { "mt-8": !site.showBackButton },
+    ]}
     data-pagefind-body
   >
-    <h1 transition:name={slugify(title)} class="inline-block text-2xl font-bold text-accent sm:text-3xl">
+    <h1
+      transition:name={slugify(title)}
+      class="inline-block text-2xl font-bold text-accent sm:text-3xl"
+    >
       {title}
     </h1>
 
@@ -54,19 +81,21 @@ const blocks = cleansePortableText(content);
     </div>
 
     <article class="mx-auto prose mt-8 max-w-3xl not-prose">
-      <!-- クライアントロードで hydrate -->
+      <!-- SSRでプリフェッチしたembedMapを渡しつつ、クライアントでハイドレート -->
       <PortableTextRendererClient
         client:load
         value={blocks}
         embedMap={embedMap}
-        headingLink
       />
     </article>
 
     {safeTags.length > 0 && (
       <ul class="mt-6 flex flex-wrap gap-3">
         {safeTags.map((t) => (
-          <Tag tag={slugify(t.slug?.current ?? t.title)} tagName={t.title} />
+          <Tag
+            tag={slugify(t.slug?.current ?? t.title)}
+            tagName={t.title}
+          />
         ))}
       </ul>
     )}
@@ -75,7 +104,10 @@ const blocks = cleansePortableText(content);
 
     <div class="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-end sm:gap-4">
       <ShareLinks shareLinks={SHARE_LINKS} />
-      <button id="back-to-top" class="focus-outline py-1 whitespace-nowrap hover:opacity-75">
+      <button
+        id="back-to-top"
+        class="focus-outline py-1 whitespace-nowrap hover:opacity-75"
+      >
         <IconChevronLeft class="inline-block rotate-90" />
         <span>Back to Top</span>
       </button>
@@ -85,7 +117,10 @@ const blocks = cleansePortableText(content);
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
       {prev && (
-        <a href={`/posts/${prev.slug}`} class="flex w-full gap-1 hover:opacity-75">
+        <a
+          href={`/posts/${prev.slug}`}
+          class="flex w-full gap-1 hover:opacity-75"
+        >
           <IconChevronLeft class="inline-block flex-none" />
           <div>
             <span>Previous Post</span>
@@ -94,7 +129,10 @@ const blocks = cleansePortableText(content);
         </a>
       )}
       {next && (
-        <a href={`/posts/${next.slug}`} class="flex w-full justify-end gap-1 text-right hover:opacity-75 sm:col-start-2">
+        <a
+          href={`/posts/${next.slug}`}
+          class="flex w-full justify-end gap-1 text-right hover:opacity-75 sm:col-start-2"
+        >
           <div>
             <span>Next Post</span>
             <div class="text-sm text-accent/85">{next.title}</div>

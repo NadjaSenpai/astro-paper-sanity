@@ -11,7 +11,6 @@ interface Props {
 
 export default function PortableTextRendererIsland({
   value,
-  headingLink = true,
   embedMap,
 }: Props) {
   // SSR のみ、クライアントのみを切り分ける場合は typeof window で検出
@@ -19,7 +18,6 @@ export default function PortableTextRendererIsland({
     return (
       <PortableTextRendererSSR
         value={value}
-        headingLink={headingLink}
         embedMap={embedMap}
       />
     );
@@ -27,7 +25,6 @@ export default function PortableTextRendererIsland({
     return (
       <PortableTextRendererClient
         value={value}
-        headingLink={headingLink}
         embedMap={embedMap}
       />
     );

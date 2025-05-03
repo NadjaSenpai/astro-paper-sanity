@@ -11,7 +11,7 @@ import { renderYouTube } from "@/utils/renderYouTube";
 interface ComponentOptions {
   isSSR?: boolean;
   headingLink?: boolean;
-  embedMap?: Record<string, EmbedData>;
+  embedMap?: Record<string, EmbedData | null>;
 }
 
 export function createPortableTextComponents({

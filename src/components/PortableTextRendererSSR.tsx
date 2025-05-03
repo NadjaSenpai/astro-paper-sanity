@@ -1,28 +1,24 @@
-// src/components/PortableTextRendererSSR.tsx
+// src/components/PortableTextRendererClient.tsx
+"use client";
+import { ReactElement } from "react";
+import type { EmbedData } from "@/components/SmartLink";
 import { PortableText } from "@portabletext/react";
 import { createPortableTextComponents } from "@/components/PortableTextComponents";
-import type { EmbedData } from "@/components/SmartLink";
 
 interface Props {
   value: any[];
-  headingLink?: boolean;
-  embedMap: Record<string, EmbedData>;
+  embedMap?: Record<string, EmbedData | null>;
 }
 
-export default function PortableTextRendererSSR({
+export default function PortableTextRendererClient({
   value,
-  headingLink = true,
   embedMap,
-}: Props) {
+}: Props): ReactElement {
   return (
-    <div className="prose dark:prose-invert max-w-none">
+    <div className="prose">
       <PortableText
         value={value}
-        components={createPortableTextComponents({
-          headingLink,
-          isSSR: true,
-          embedMap,
-        })}
+        components={createPortableTextComponents({ isSSR: false, embedMap })}
       />
     </div>
   );
