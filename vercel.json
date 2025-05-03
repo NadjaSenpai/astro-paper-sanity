@@ -4,8 +4,15 @@
   "outputDirectory": "dist",
   "routes": [
     {
-      "src": "/robots.txt",
-      "dest": "/robots.txt"
+      "src": "/api/(.*)",
+      "dest": "/api/$1.ts"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/_worker.js"
     }
   ]
 }
