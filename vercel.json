@@ -6,13 +6,6 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/$1.ts"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
     }
   ]
 }
