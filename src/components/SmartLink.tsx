@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export interface EmbedData {
   type: "oembed" | "ogp";
@@ -11,34 +11,35 @@ export interface EmbedData {
   url?: string;
 }
 
-interface SmartLinkProps {
+interface Props {
   url: string;
 }
 
-export default function SmartLink({ url }: SmartLinkProps) {
+export default function SmartLink({ url }: Props) {
   const [data, setData] = useState<EmbedData | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const isTwitter = url.includes("twitter.com") || url.includes("x.com");
-  const isYouTube = url.includes("youtube.com") || url.includes("youtu.be");
-  const isVimeo = url.includes("vimeo.com");
+  const isMedia = /youtube\.com|youtu\.be|vimeo\.com/.test(url);
 
   useEffect(() => {
-    const theme = "dark";
-
-    const fetchUrl = `/api/fetch-embed?url=${encodeURIComponent(url)}${
-      isTwitter ? `&theme=${theme}` : ""
-    }`;
-
     const fetchEmbed = async () => {
+      const origin = window.location.origin;
+      const params = new URLSearchParams({ url });
+      if (isTwitter) params.set("theme", "dark");
+
+      const endpoint = `${origin}/api/fetch-embed?${params.toString()}`;
+      console.log("[SmartLink] fetching", endpoint);
+
       try {
-        const res = await fetch(fetchUrl);
+        const res = await fetch(endpoint, { credentials: "same-origin" });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         const json = await res.json();
+        if ((json.type === "oembed" && json.html) || json.type === "ogp") {
+          setData(json as EmbedData);
 
-        if (json?.type === "oembed" && json.html) {
-          setData({ type: "oembed", html: json.html });
-
+          // ← Twitter 埋め込み用 widget.js の読み込み
           if (
+            json.type === "oembed" &&
             isTwitter &&
             !document.querySelector('script[src*="platform.twitter.com/widgets.js"]')
           ) {
@@ -47,18 +48,17 @@ export default function SmartLink({ url }: SmartLinkProps) {
             script.async = true;
             document.body.appendChild(script);
           }
-        } else if (json?.type === "ogp") {
-          setData(json);
         }
       } catch (err) {
         console.error("SmartLink fetch error", err);
+        setData(null);
       }
     };
 
     fetchEmbed();
-  }, [url]);
+  }, [url, isTwitter]);
 
-  // ✅ oEmbed 成功時
+  // oEmbed
   if (data?.type === "oembed" && data.html) {
     return (
       <>
@@ -66,16 +66,15 @@ export default function SmartLink({ url }: SmartLinkProps) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:opacity-80 block mb-2"
+          className="underline block mb-2"
         >
           {url}
         </a>
         <div
-          ref={containerRef}
           className={
-            isYouTube || isVimeo
-              ? "relative w-full aspect-video my-4 max-w-none [&>iframe]:absolute [&>iframe]:top-0 [&>iframe]:left-0 [&>iframe]:w-full [&>iframe]:h-full"
-              : "my-4 w-full max-w-3xl overflow-x-auto [&>iframe]:w-full [&>iframe]:block"
+            isMedia
+              ? "relative w-full aspect-video my-4 [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:w-full [&>iframe]:h-full"
+              : "my-4 w-full overflow-x-auto [&>iframe]:w-full"
           }
           dangerouslySetInnerHTML={{ __html: data.html }}
         />
@@ -83,7 +82,7 @@ export default function SmartLink({ url }: SmartLinkProps) {
     );
   }
 
-  // ✅ OGP 成功時
+  // OGP
   if (data?.type === "ogp") {
     return (
       <>
@@ -91,7 +90,7 @@ export default function SmartLink({ url }: SmartLinkProps) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:opacity-80 block mb-2"
+          className="underline block mb-2"
         >
           {url}
         </a>
@@ -99,32 +98,27 @@ export default function SmartLink({ url }: SmartLinkProps) {
           href={data.url || url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block my-4 w-full max-w-3xl rounded border border-border bg-muted/20 p-4 hover:bg-muted/40 transition"
+          className="block my-4 max-w-3xl rounded border bg-muted/20 p-4 hover:bg-muted/40 transition"
         >
           {data.image && (
             <img
               src={data.image}
-              alt={data.title || ""}
-              className="mb-2 max-h-48 w-full object-cover rounded"
+              alt={data.title}
+              className="mb-2 w-full object-cover rounded"
             />
           )}
           <div className="text-lg font-semibold">{data.title}</div>
-          {data.description && (
-            <div className="mt-1 text-sm text-foreground/70 line-clamp-2">{data.description}</div>
-          )}
+          <p className="mt-1 text-sm text-foreground/70 line-clamp-2">
+            {data.description}
+          </p>
         </a>
       </>
     );
   }
 
-  // ✅ それ以外（fetch失敗や未対応）のとき：ふつうのリンク表示
+  // フォールバック
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="underline hover:opacity-80"
-    >
+    <a href={url} target="_blank" rel="noopener noreferrer" className="underline">
       {url}
     </a>
   );
