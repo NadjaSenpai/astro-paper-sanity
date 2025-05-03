@@ -14,3 +14,13 @@ SANITY_API_VERSION = "2025-05-03"
 SANITY_DATASET = "production"
 SANITY_PROJECT_ID = "bwyjt9uz"
 SANITY_USE_CDN = "true"
+
+[build]
+command = "npm run build"
+# 静的出力先を指定
+upload.format = "directory"
+upload.dir = "dist"
+
+[functions]
+# Pages Functions の置き場所
+directory = "functions"
