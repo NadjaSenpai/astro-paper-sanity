@@ -29,6 +29,7 @@
     "@types/react": "19.1.0",
     "astro": "^5.7.10",
     "autoprefixer": "^10.4.21",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
     "lodash.kebabcase": "^4.1.1",
