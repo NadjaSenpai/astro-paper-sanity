@@ -1,38 +1,32 @@
-import slugify from "../utils/slugify";
+import { defineType, defineField } from "sanity";
 
-export default {
+export default defineType({
   name: "tag",
   type: "document",
   title: "Tag",
   fields: [
-    {
+    defineField({
       name: "title",
       type: "string",
-      title: "Tag Name",
-      validation: (Rule as any) => Rule.required(),
-    },
-    {
+      title: "Tag Title",
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: "slug",
-      title: "Slug",
       type: "slug",
+      title: "Slug",
       options: {
         source: "title",
         maxLength: 96,
-        slugify,
       },
-      validation: (Rule as any) =>
+      validation: (Rule) =>
         Rule.required().custom((value: any) => {
-          const slug =
-            typeof value === "string"
-              ? value
-              : (value as { current?: string })?.current;
-          if (!slug) return true;
           const regex = /^[a-z0-9\-]+$/;
-          return (
-            regex.test(slug) ||
-            "スラッグは小文字の英数字とハイフンのみ使用できます"
-          );
+          if (!value) return true; // Sanity側で required はチェック済み
+          return regex.test(value)
+            ? true
+            : "Slug must only contain lowercase letters, numbers, and dashes.";
         }),
-    },
+    }),
   ],
-};
+});
