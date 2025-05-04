@@ -20,9 +20,18 @@ importers:
       '@portabletext/react':
         specifier: ^3.2.1
         version: 3.2.1(react@19.1.0)
+      '@portabletext/types':
+        specifier: ^2.0.13
+        version: 2.0.13
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
+      '@sanity/client':
+        specifier: ^7.0.0
+        version: 7.0.0(debug@4.4.0)
+      '@sanity/image-url':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@tailwindcss/postcss':
         specifier: ^4.1.5
         version: 4.1.5
@@ -47,6 +56,9 @@ importers:
       lodash.kebabcase:
         specifier: ^4.1.1
         version: 4.1.1
+      node-html-parser:
+        specifier: ^7.0.1
+        version: 7.0.1
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -5005,6 +5017,9 @@ packages:
 
   node-html-parser@6.1.13:
     resolution: {integrity: sha512-qIsTMOY4C/dAa5Q5vsobRpOOvPfC4pB61UVW2uSwZNUp0QU/jCekTal1vMmbO0DgdHeLUJpv/ARmDqErVxA3Sg==}
+
+  node-html-parser@7.0.1:
+    resolution: {integrity: sha512-KGtmPY2kS0thCWGK0VuPyOS+pBKhhe8gXztzA2ilAOhbUbxa9homF1bOyKvhGzMLXUoRds9IOmr/v5lr/lqNmA==}
 
   node-mock-http@1.0.0:
     resolution: {integrity: sha512-0uGYQ1WQL1M5kKvGRXWQ3uZCHtLTO8hln3oBjIusM75WoesZ909uQJs/Hb946i2SS+Gsrhkaa6iAO17jRIv6DQ==}
@@ -12858,6 +12873,11 @@ snapshots:
       whatwg-url: 5.0.0
 
   node-html-parser@6.1.13:
+    dependencies:
+      css-select: 5.1.0
+      he: 1.2.0
+
+  node-html-parser@7.0.1:
     dependencies:
       css-select: 5.1.0
       he: 1.2.0
