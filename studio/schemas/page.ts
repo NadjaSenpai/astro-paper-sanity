@@ -1,5 +1,6 @@
 import { defineType, defineField, defineArrayMember } from "sanity";
 import slugify from "../utils/slugify";
+import type { Rule as RuleType } from "sanity";
 
 export default defineType({
   name: "page",
