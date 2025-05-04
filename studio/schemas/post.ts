@@ -7,8 +7,8 @@ export default defineType({
   type: "document",
   title: "Post",
   fields: [
-    defineField({ name: "title", type: "string", title: "Title", validation: (Rule) => Rule.required() }),
-    defineField({ name: "slug", type: "slug", title: "Slug", options: { source: "title", maxLength: 96, slugify }, validation: (Rule: RuleType) => Rule.required() }),
+    defineField({ name: "title", type: "string", title: "Title", validation: Rule => Rule.required() }),
+    defineField({ name: "slug", type: "slug", title: "Slug", options: { source: "title", maxLength: 96, slugify }, validation: Rule => Rule.required() }),
     defineField({ name: "tags", type: "array", title: "Tags", of: [ defineArrayMember({ type: "reference", to: [{ type: "tag" }] }) ] }),
     defineField({
       name: "content",
@@ -52,7 +52,7 @@ export default defineType({
               name: "url",
               type: "url",
               title: "YouTube URL",
-              validation: (Rule: RuleType) => Rule.uri({
+              validation: Rule => Rule.uri({
                 scheme: ["https"],
                 allowRelative: false,
               }),
@@ -62,7 +62,7 @@ export default defineType({
       ],
     }),
     defineField({ name: "description", type: "text", title: "Description" }),
-    defineField({ name: "pubDate", type: "datetime", title: "Published at", validation: (Rule: RuleType) => Rule.required() }),
+    defineField({ name: "pubDate", type: "datetime", title: "Published at", validation: Rule => Rule.required() }),
     defineField({ name: "modDate", type: "datetime", title: "Modified at" }),
     defineField({ name: "featured", type: "boolean", title: "Featured" }),
     defineField({ name: "archived", type: "boolean", title: "Archived", initialValue: false }),

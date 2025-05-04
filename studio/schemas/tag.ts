@@ -10,7 +10,7 @@ export default {
       name: "title",
       type: "string",
       title: "Tag Name",
-      validation: (Rule: RuleType) => Rule.required(),
+      validation: Rule => Rule.required(),
     },
     {
       name: "slug",
@@ -21,7 +21,7 @@ export default {
         maxLength: 96,
         slugify,
       },
-      validation: (Rule: RuleType) =>
+      validation: Rule =>
         Rule.required().custom((value) => {
           const slug =
             typeof value === "string"
