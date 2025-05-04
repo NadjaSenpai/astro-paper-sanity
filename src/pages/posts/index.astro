@@ -1,9 +1,9 @@
 ---
 // src/pages/index.astro
 
-// SSR (astro dev / adapter) 時はサーバーサイドで 302 を返す
+// SSR (astro dev / adapter) 時はサーバーサイドで 301 を返す
 export function get({ redirect }) {
-  return redirect("/posts/page/1", 302);
+  return redirect("/posts/page/1", 301);
 }
 
 // SSG として静的 HTML を吐く
@@ -24,7 +24,7 @@ const target = "/posts/page/1";
 
     <!-- JS フォールバック（SSG 時） -->
     <script is:inline>
-      {`window.location.replace("${target}");`}
+      {`window.location.replace(${JSON.stringify(target)});`}
     </script>
   </head>
   <body>

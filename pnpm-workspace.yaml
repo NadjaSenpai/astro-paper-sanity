@@ -1,0 +1,6 @@
+packages:
+  - 'studio'
+
+ignoredBuiltDependencies:
+  - esbuild
+  - sharp
