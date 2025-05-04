@@ -1,4 +1,3 @@
-import type { Rule as RuleType } from "sanity";
 import slugify from "../utils/slugify";
 
 export default {
@@ -10,7 +9,7 @@ export default {
       name: "title",
       type: "string",
       title: "Tag Name",
-      validation: Rule => Rule.required(),
+      validation: (Rule as any) => Rule.required(),
     },
     {
       name: "slug",
@@ -21,8 +20,8 @@ export default {
         maxLength: 96,
         slugify,
       },
-      validation: Rule =>
-        Rule.required().custom((value) => {
+      validation: (Rule as any) =>
+        Rule.required().custom((value: any) => {
           const slug =
             typeof value === "string"
               ? value

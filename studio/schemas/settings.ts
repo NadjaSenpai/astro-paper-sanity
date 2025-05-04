@@ -1,5 +1,4 @@
 import { defineType, defineField, defineArrayMember } from "sanity";
-import type { Rule as RuleType } from "sanity";
 
 export default defineType({
   name: "settings",
