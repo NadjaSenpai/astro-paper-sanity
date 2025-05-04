@@ -6,8 +6,8 @@ export default defineType({
   type: "document",
   title: "Page",
   fields: [
-    defineField({ name: "title", type: "string", title: "Page Title", validation: (Rule) => Rule.required() }),
-    defineField({ name: "slug", type: "slug", title: "Slug", options: { source: "title", maxLength: 96, slugify }, validation: (Rule) => Rule.required() }),
+    defineField({ name: "title", type: "string", title: "Page Title", validation: (Rule: RuleType) => Rule.required() }),
+    defineField({ name: "slug", type: "slug", title: "Slug", options: { source: "title", maxLength: 96, slugify }, validation: (Rule: RuleType) => Rule.required() }),
     defineField({
       name: "content",
       type: "array",
@@ -50,7 +50,7 @@ export default defineType({
               name: "url",
               type: "url",
               title: "YouTube URL",
-              validation: (Rule) => Rule.uri({
+              validation: (Rule: RuleType) => Rule.uri({
                 scheme: ["https"],
                 allowRelative: false,
               }),

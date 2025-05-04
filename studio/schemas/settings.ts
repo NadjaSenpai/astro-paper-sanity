@@ -5,7 +5,7 @@ export default defineType({
   title: "Site Settings",
   type: "document",
   fields: [
-    defineField({ name: "title", title: "Site Title", type: "string", validation: (Rule) => Rule.required() }),
+    defineField({ name: "title", title: "Site Title", type: "string", validation: (Rule: RuleType) => Rule.required() }),
     defineField({ name: "description", title: "Site Description", type: "text" }),
     defineField({ name: "website", title: "Website URL", type: "url" }),
     defineField({ name: "author", title: "Author", type: "string" }),
@@ -56,7 +56,7 @@ export default defineType({
               name: "url",
               type: "url",
               title: "YouTube URL",
-              validation: (Rule) => Rule.uri({
+              validation: (Rule: RuleType) => Rule.uri({
                 scheme: ["https"],
                 allowRelative: false,
               }),
