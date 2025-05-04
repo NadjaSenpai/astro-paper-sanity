@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { ja } from "date-fns/locale/ja";
+import ja from "date-fns/locale/ja";
 
 interface Props {
   title: string;
