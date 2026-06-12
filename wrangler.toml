@@ -4,3 +4,8 @@
 name = "astro-paper-sanity"
 compatibility_date = "2025-05-03"
 pages_build_output_dir = "./dist"
+
+# Keep environment variables and secrets set in the Cloudflare dashboard.
+# Without this, Wrangler erases dashboard env vars on each deploy and they
+# become invisible to the build (Astro then fails to read SANITY_PROJECT_ID).
+keep_vars = true
