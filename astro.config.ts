@@ -15,19 +15,15 @@ export default defineConfig({
     resolve: {
       alias: {
         "@": path.resolve("./src"),
-        "@sanity/clientConfig": path.resolve("./sanity/clientConfig.ts"),
       },
     },
     assetsInclude: ["**/*.ttf"],
     optimizeDeps: {
-      exclude: ["@resvg/resvg-js"], // ← resvg はプリバンドルさせない
+      exclude: ["@resvg/resvg-js"],
     },
     ssr: {
-      noExternal: [
-        "@resvg/resvg-js",        // ← resvg のネイティブモジュールを除外
-        "@sanity/clientConfig",
-      ],
-      external: ["@resvg/resvg-js"]
+      noExternal: ["@resvg/resvg-js"],
+      external: ["@resvg/resvg-js"],
     },
     plugins: [
       {
