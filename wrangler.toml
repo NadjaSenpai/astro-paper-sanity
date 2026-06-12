@@ -1,0 +1,6 @@
+# Cloudflare Pages configuration
+# Account ID is intentionally omitted; set it in the Cloudflare dashboard or via
+# CLOUDFLARE_ACCOUNT_ID env var when deploying with wrangler.
+name = "astro-paper-sanity"
+compatibility_date = "2025-05-03"
+pages_build_output_dir = "./dist"

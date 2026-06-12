@@ -1,0 +1,28 @@
+---
+import LinkButton from "./LinkButton.astro";
+
+export interface Props {
+  centered?: boolean;
+  socials: {
+    name: string;
+    href: string;
+    linkTitle: string;
+    icon: any;
+  }[];
+}
+
+const { centered = false, socials } = Astro.props;
+---
+
+<div class:list={["flex-wrap justify-center gap-1", { flex: centered }]}>
+  {socials.map((social) => (
+    <LinkButton
+      href={social.href}
+      class="p-2 hover:rotate-6 sm:p-1"
+      title={social.linkTitle}
+    >
+      <social.icon class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" />
+      <span class="sr-only">{social.linkTitle}</span>
+    </LinkButton>
+  ))}
+</div>

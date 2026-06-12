@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "framework": "astro",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.ts"
+    }
+  ]
+}

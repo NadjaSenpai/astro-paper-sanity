@@ -1,0 +1,97 @@
+---
+import { getPosts } from "@/lib/sanity";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Socials from "@/components/Socials.astro";
+import LinkButton from "@/components/LinkButton.astro";
+import Card from "@/components/Card.astro";
+import Hr from "@/components/Hr.astro";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+import { getSocialLinks } from "@/constants";
+import PortableTextRendererClient from "@/components/PortableTextRendererClient";
+import { cleansePortableText } from "@/lib/sanity/utils/helpers";
+
+const site = await getSiteConfig();
+const SOCIALS = getSocialLinks(site);
+
+const allPosts = (await getPosts())
+  .filter((post) => {
+    const d = new Date(post.pubDate);
+    return post.pubDate && !isNaN(d.getTime());
+  })
+  .map((post) => ({
+    ...post,
+    pubDate: new Date(post.pubDate),
+    modDate: post.modDate ? new Date(post.modDate) : undefined,
+  }));
+
+const featuredPosts = allPosts.filter((post) => post.featured);
+const recentPosts  = allPosts.filter((post) => !post.featured);
+---
+<Layout>
+  <Header />
+  <main id="main-content" data-layout="index">
+    <section id="hero" class="pt-8 pb-6">
+      <div>
+        <PortableTextRendererClient
+          client:load
+          value={cleansePortableText(site.message)}
+          headingLink={false}
+        />
+      </div>
+
+      {SOCIALS.length > 0 && (
+        <div class="mt-4 flex flex-col sm:flex-row sm:items-center">
+          <div class="mr-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
+          <Socials socials={SOCIALS} />
+        </div>
+      )}
+    </section>
+
+    <Hr />
+
+    {featuredPosts.length > 0 && (
+      <>
+        <section id="featured" class="pt-12 pb-6">
+          <h2 class="text-2xl font-semibold tracking-wide">Featured Posts</h2>
+          <ul class="space-y-6">
+            {featuredPosts.map((post) => (
+              <Card {...post} variant="h2" />
+            ))}
+          </ul>
+        </section>
+        <Hr />
+      </>
+    )}
+
+    {recentPosts.length > 0 && (
+      <section id="recent-posts" class="pt-12 pb-6">
+        <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
+        <ul class="space-y-6">
+          {recentPosts
+            .slice(0, site.postPerIndex ?? 4)
+            .map((post) => (
+              <Card {...post} variant="h3" />
+            ))}
+        </ul>
+      </section>
+    )}
+
+    <div class="my-8 text-center">
+      <LinkButton href="/posts/">
+        All Posts
+        <IconArrowRight class="inline-block" />
+      </LinkButton>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script is:inline>
+  // ページから戻ってきたときのセッション保存
+  document.addEventListener("astro:page-load", () => {
+    sessionStorage.setItem("backUrl", "/");
+  });
+</script>

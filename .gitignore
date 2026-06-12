@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+.astro/
+.sanity/
+/public/pagefind
+
+# Logs / coverage
+logs/
+*.log
+coverage/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Sensitive
+*.pem
+*.local
+.env
+.env.*
+!env.example
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Hosting CLI state
+.vercel/
+.wrangler/

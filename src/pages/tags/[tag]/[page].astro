@@ -1,0 +1,66 @@
+---
+import { getPosts, getTags } from "@/lib/sanity";
+import Layout from "@/layouts/Layout.astro";
+import Card from "@/components/Card.astro";
+import Main from "@/layouts/Main.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import { getSiteConfig } from "@/lib/getSiteConfig";
+
+
+export async function getStaticPaths() {
+  const tags = await getTags();
+  const posts = await getPosts();
+
+  const paths = tags.flatMap(tag => {
+    const slug = typeof tag.slug === "string" ? tag.slug : tag.slug.current;
+    const relatedPosts = posts.filter(post =>
+      post.tags?.some(t =>
+        (typeof t.slug === "object" ? t.slug.current : t.slug) === slug
+      )
+    );
+    const totalPages = Math.ceil(relatedPosts.length / 10);
+    return Array.from({ length: totalPages }).map((_, i) => ({
+      params: { tag: slug, page: String(i + 1) },
+    }));
+  });
+
+  return paths;
+}
+
+const { tag, page } = Astro.params;
+const currentPage = parseInt(page);
+const allPosts = await getPosts();
+
+const filtered = allPosts.filter(post =>
+  post.tags?.some(t =>
+    (typeof t.slug === "object" ? t.slug.current : t.slug) === tag
+  )
+);
+
+const totalPages = Math.ceil(filtered.length / 10);
+const start = (currentPage - 1) * 10;
+const end = start + 10;
+const posts = filtered.slice(start, end);
+const site = await getSiteConfig();
+---
+
+
+<Layout title={`Tag: ${tag} | ${site.title}`}>
+<Header />
+  <Main>
+  <ul>
+    {posts.map(post => (
+      <Card
+        title={post.title}
+        slug={post.slug}
+        pubDate={post.pubDate}
+        description={post.description}
+        modDate={post.modDate}
+        tags={post.tags}
+      />
+    ))}
+  </ul>
+  </Main>
+<Footer />
+</Layout>

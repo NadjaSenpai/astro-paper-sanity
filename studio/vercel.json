@@ -1,0 +1,20 @@
+{
+  "routes": [
+    {
+      "src": "/(.*)",
+      "headers": {
+        "www-authenticate": "Basic realm='Secure Area'"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "dest": "/$1",
+      "check": true,
+      "headers": {
+        "authorization": "Basic YOUR_ENCODED_CREDENTIALS"
+      }
+    }
+  ]
+}

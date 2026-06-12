@@ -1,0 +1,38 @@
+---
+import IconHash from "@/assets/icons/IconHash.svg";
+
+export interface Props {
+  tag: string | { current: string };
+  tagName: string;
+  size?: "sm" | "lg";
+}
+
+const rawTag = Astro.props.tag;
+const tag = rawTag && typeof rawTag === "object" && "current" in rawTag
+  ? rawTag.current
+  : typeof rawTag === "string"
+    ? rawTag
+    : "";
+
+const { tagName, size = "sm" } = Astro.props;
+---
+
+<li
+  class:list={[
+    "group inline-block group-hover:cursor-pointer",
+    size === "sm" ? "my-1 underline-offset-4" : "mx-1 my-3 underline-offset-8",
+  ]}
+>
+  <a
+    href={`/tags/${tag}/`}
+    transition:name=`${tag}`
+    class:list={[
+      "inline-block text-lg underline decoration-dashed group-hover:-top-0.5 group-hover:text-accent focus-visible:p-1",
+      { "text-sm": size === "sm" },
+    ]}
+  >
+    <span class="opacity-80">#</span>{tagName}
+  </a>
+</li>
+
+
