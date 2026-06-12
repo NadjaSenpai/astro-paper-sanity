@@ -143,21 +143,71 @@ export async function onRequestGet(context: {
     }
   }
 
-  // ─── OGP フォールバック ───
+  // ─── OGP / 多段フォールバック ───
+  // og:* → twitter:* → <title> / <meta name="description"> → 画像系の最終手段
+  // (Amazon など OGP メタを出さないサイト向け)
   try {
-    const htmlText = await fetch(rawUrl, { headers: { "User-Agent": "Mozilla/5.0" } }).then((r) =>
-      r.text()
-    );
+    const htmlText = await fetch(rawUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "ja,en;q=0.8",
+      },
+    }).then(r => r.text());
     const root = parse(htmlText);
-    const get = (prop: string) =>
-      root.querySelector(`meta[property="${prop}"]`)?.getAttribute("content")?.trim() || "";
-    const getLink = (rel: string) =>
+
+    const metaProp = (prop: string) =>
+      root.querySelector(`meta[property="${prop}"]`)?.getAttribute("content")?.trim() ||
+      "";
+    const metaName = (name: string) =>
+      root.querySelector(`meta[name="${name}"]`)?.getAttribute("content")?.trim() || "";
+    const linkRel = (rel: string) =>
       root.querySelector(`link[rel="${rel}"]`)?.getAttribute("href")?.trim() || "";
 
-    const title       = get("og:title");
-    const image       = get("og:image") || getLink("image_src");
-    const description = get("og:description");
-    const finalUrl    = get("og:url") || rawUrl;
+    const title =
+      metaProp("og:title") ||
+      metaName("twitter:title") ||
+      root.querySelector("title")?.text?.trim() ||
+      "";
+
+    const description =
+      metaProp("og:description") ||
+      metaName("twitter:description") ||
+      metaName("description") ||
+      "";
+
+    let image =
+      metaProp("og:image") ||
+      metaName("twitter:image") ||
+      metaName("twitter:image:src") ||
+      linkRel("image_src") ||
+      "";
+
+    // それでも画像が無ければ <img> の中で「商品っぽい」ものを探す
+    if (!image) {
+      const candidate =
+        root.querySelector("#landingImage") ||           // Amazon 商品ページ
+        root.querySelector("img[data-old-hires]") ||     // Amazon の高解像度版
+        root.querySelector("article img") ||
+        root.querySelector("main img") ||
+        root.querySelector("img");
+      image =
+        candidate?.getAttribute("data-old-hires")?.trim() ||
+        candidate?.getAttribute("src")?.trim() ||
+        "";
+    }
+
+    // 相対パスを絶対化
+    if (image && !/^https?:\/\//.test(image)) {
+      try {
+        image = new URL(image, rawUrl).toString();
+      } catch {
+        image = "";
+      }
+    }
+
+    const finalUrl = metaProp("og:url") || rawUrl;
 
     if (title || image) {
       return new Response(
@@ -171,8 +221,8 @@ export async function onRequestGet(context: {
         }
       );
     }
-  } catch {
-    // fallthrough
+  } catch (err) {
+    console.warn("[fetch-embed] ogp fallback failed:", err);
   }
 
   // ─── 全フォールバック ───
