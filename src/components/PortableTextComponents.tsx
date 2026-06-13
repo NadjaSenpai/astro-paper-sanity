@@ -7,13 +7,18 @@ import CodeBlock from "@/components/CodeBlock";
 import ImageWithModal from "@/components/ImageWithModal";
 import SmartLink from "@/components/SmartLink";
 import { renderYouTube } from "@/utils/renderYouTube";
+import type { HighlightedCodeMap } from "@/lib/highlight/highlightCodeBlocks";
 
-export function createPortableTextComponents(): Record<string, any> {
+export function createPortableTextComponents(
+  highlightedCode: HighlightedCodeMap = {}
+): Record<string, any> {
   return {
     types: {
       code: (props: any): ReactElement => {
         const { code, language } = props.value as { code: string; language?: string };
-        return <CodeBlock value={{ code, language }} />;
+        const key = props.value?._key as string | undefined;
+        const html = key ? highlightedCode[key] : undefined;
+        return <CodeBlock html={html} value={{ code, language }} />;
       },
       image: (props: any): ReactElement => <ImageWithModal value={props.value} />,
       youtube: (props: any): ReactElement => renderYouTube({ value: props.value }),

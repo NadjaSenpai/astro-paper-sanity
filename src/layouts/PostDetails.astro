@@ -14,6 +14,7 @@ import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getShareLinks } from "@/constants";
 import { cleansePortableText } from "@/lib/sanity/utils/helpers";
 import PortableTextRendererClient from "@/components/PortableTextRendererClient";
+import { highlightCodeBlocks } from "@/lib/highlight/highlightCodeBlocks";
 
 const site = await getSiteConfig();
 const SHARE_LINKS = getShareLinks(site);
@@ -36,6 +37,8 @@ const next = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
 
 // PortableText 用に必ず配列化
 const blocks = cleansePortableText(content);
+// ビルド時に Shiki でコードブロックをハイライト（_key → HTML マップ）
+const highlightedCode = await highlightCodeBlocks(blocks);
 ---
 
 <Layout>
@@ -66,6 +69,7 @@ const blocks = cleansePortableText(content);
       <PortableTextRendererClient
         client:load
         value={blocks}
+        highlightedCode={highlightedCode}
       />
     </article>
 

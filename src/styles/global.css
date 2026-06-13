@@ -93,3 +93,20 @@ code[class*="language-"] {
 .prose > :first-child {
   margin-top: 0 !important;
 }
+
+/* Shiki デュアルテーマ: data-theme=dark のとき dark 配色へ（JSなし切替） */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+html[data-theme="dark"] .shiki,
+html[data-theme="dark"] .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+.shiki {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
