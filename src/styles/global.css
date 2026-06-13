@@ -108,5 +108,34 @@ html[data-theme="dark"] .shiki span {
 .shiki {
   overflow-x: auto;
   border-radius: 0.5rem;
-  padding: 1rem;
+  /* top は Copy ボタンの分だけ余白を多めに、left は行番号カラム用に詰める */
+  padding: 2.25rem 1rem 1rem 0;
+}
+
+/* 行番号: shiki が出す <span class="line"> ごとに CSS counter を回す */
+.shiki code {
+  counter-reset: shiki-line;
+  display: grid;
+}
+.shiki .line {
+  counter-increment: shiki-line;
+}
+.shiki .line::before {
+  content: counter(shiki-line);
+  display: inline-block;
+  width: 2.5rem;
+  margin-right: 1rem;
+  padding-right: 0.5rem;
+  text-align: right;
+  color: rgb(0 0 0 / 0.35);
+  border-right: 1px solid rgb(0 0 0 / 0.1);
+  user-select: none;
+}
+html[data-theme="dark"] .shiki .line::before {
+  color: rgb(255 255 255 / 0.3);
+  border-right-color: rgb(255 255 255 / 0.1);
+}
+/* 最終行が空のときに番号だけ余計に出るのを抑制 */
+.shiki .line:last-child:empty::before {
+  content: "";
 }
