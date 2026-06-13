@@ -1,80 +1,31 @@
 ---
-import slugify from "@/utils/slugify";
+import type { V6PostEntry } from "@/lib/sanity/adapter";
+import { getPostUrl } from "@/utils/getPostPaths";
+import { toTransitionName } from "@/utils/toTransitionName";
 import Datetime from "./Datetime.astro";
-import { getPath } from "@/utils/getPath";
 
-export interface Props {
-  title: string;
-  description?: string;
-  pubDate: string | Date;
-  modDate?: string | Date;
-  timezone?: string;
-  slug: { current: string } | string;
-  tags?: { title: string; slug?: { current: string } }[];
+type Props = {
   variant?: "h2" | "h3";
-}
+} & V6PostEntry;
 
-const {
-  title = "No Title",
-  description,
-  pubDate,
-  modDate,
-  timezone = "Asia/Tokyo",
-  slug,
-  tags = [],
-  variant = "h2",
-} = Astro.props;
+const { variant: Heading = "h2", id, data, filePath } = Astro.props;
 
-const safeSlug = typeof slug === "string" ? slug : slug?.current ?? title;
-const transitionName = slugify(safeSlug);
-
-const headerProps = {
-  "transition:name": transitionName,
-  class: "text-lg font-medium decoration-dashed hover:underline",
-};
-
-const parsedPub = pubDate instanceof Date ? pubDate : new Date(pubDate);
-const parsedMod = modDate
-  ? (modDate instanceof Date ? modDate : new Date(modDate))
-  : undefined;
-
-const isValidDate = (d: any): d is Date => d instanceof Date && !isNaN(d.getTime());
-
-if (!isValidDate(parsedPub)) {
-  throw new Error(`Invalid pubDate: ${JSON.stringify(pubDate)}`);
-}
+const { title, description, ...props } = data;
 ---
 
 <li class="my-6">
   <a
-    href={`/posts/${safeSlug}`}
-    class="inline-block text-lg font-medium text-accent decoration-dashed underline-offset-4 focus-visible:no-underline focus-visible:underline-offset-0"
+    href={getPostUrl(id, filePath, Astro.currentLocale)}
+    class:list={[
+      "text-accent inline-block text-lg font-medium",
+      "decoration-dashed underline-offset-4 hover:underline",
+      "focus-visible:no-underline focus-visible:underline-offset-0",
+    ]}
   >
-    {
-      variant === "h2" ? (
-        <h2 {...headerProps}>{title}</h2>
-      ) : (
-        <h3 {...headerProps}>{title}</h3>
-      )
-    }
+    <Heading transition:name={toTransitionName(title)}>
+      {title}
+    </Heading>
   </a>
-
-  <Datetime pubDate={parsedPub} modDate={parsedMod} timezone={timezone} />
-
-  {Array.isArray(tags) && tags.length > 0 && (
-    <ul class="mt-2 flex flex-wrap gap-2 text-sm text-muted-foreground">
-      {tags.map(tag => (
-        <li>
-          <a
-            href={`/tags/${slugify(tag.slug?.current ?? tag.title)}`}
-            class="underline underline-offset-4 decoration-dotted hover:text-accent"
-          >
-            #{tag.title}
-          </a>
-        </li>
-      ))}
-    </ul>
-  )}
-
-  {description && <p class="mt-2 text-base">{description}</p>}
+  <Datetime {...props} />
+  <p>{description}</p>
 </li>

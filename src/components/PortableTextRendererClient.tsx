@@ -1,7 +1,7 @@
 // src/components/PortableTextRendererClient.tsx
 "use client";
 
-import { ReactElement } from "react";
+import type { ReactElement } from "react";
 import { PortableText } from "@portabletext/react";
 import { createPortableTextComponents } from "./PortableTextComponents";
 import type { HighlightedCodeMap } from "@/lib/highlight/highlightCodeBlocks";

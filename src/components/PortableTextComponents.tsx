@@ -1,7 +1,7 @@
 // src/components/PortableTextComponents.tsx
 "use client";
 
-import { ReactElement } from "react";
+import type { ReactElement } from "react";
 import type { PortableTextComponentProps } from "@portabletext/react";
 import CodeBlock from "@/components/CodeBlock";
 import ImageWithModal from "@/components/ImageWithModal";

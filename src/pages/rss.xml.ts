@@ -1,24 +1,24 @@
 import rss from "@astrojs/rss";
-import { getSiteConfig } from "@/lib/getSiteConfig";
 import { getPosts } from "@/lib/sanity";
-import type { Post } from "@/lib/sanity/api/types"; // ← ここ追加
+import { sanityPostsToV6 } from "@/lib/sanity/adapter";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import { getPostUrl } from "@/utils/getPostPaths";
+import config from "@/config";
 
-const site = await getSiteConfig();
-
-export const GET = async () => {
-  const posts: Post[] = await getPosts(); // ← ここで型付け
+export async function GET() {
+  const rawPosts = await getPosts();
+  const posts = sanityPostsToV6(rawPosts);
+  const sortedPosts = getSortedPosts(posts);
 
   return rss({
-    title: site.title,
-    description: site.description,
-    site: site.website ?? "https://example.com", // fallbackあり
-    items: posts
-      .filter(post => post?.pubDate && post?.slug?.current)
-      .map(post => ({
-        title: post.title,
-        description: post.description || "",
-        pubDate: new Date(post.pubDate),
-        link: `${site.website ?? "https://example.com"}/posts/${post.slug.current}`,
-      })),
-  });  
+    title: config.site.title,
+    description: config.site.description,
+    site: config.site.url,
+    items: sortedPosts.map(({ data, id, filePath }) => ({
+      link: getPostUrl(id, filePath, config.site.lang),
+      title: data.title,
+      description: data.description,
+      pubDate: new Date(data.modDatetime ?? data.pubDatetime),
+    })),
+  });
 }
