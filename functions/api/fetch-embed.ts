@@ -76,24 +76,30 @@ export async function onRequestGet(context: {
   }
 
   // ─── Vimeo ───
+  // Vimeo's oEmbed API is unreliable from Cloudflare Pages Functions
+  // (Cloudflare-to-Cloudflare traffic gets bot-challenged), so synthesise
+  // the iframe directly from the video ID. Same approach as YouTube/Spotify.
   if (/vimeo\.com/.test(rawUrl)) {
-    try {
-      const api = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(
-        rawUrl
-      )}`;
-      const res = await fetch(api);
-      if (res.ok) {
-        const { html } = await res.json();
-        return new Response(JSON.stringify({ type: "oembed", html }), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store, max-age=0",
-          },
-        });
-      }
-    } catch {
-      // fallthrough
+    const m = rawUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (m) {
+      const id = m[1];
+      const html = `
+        <div class="relative w-full aspect-video my-4">
+          <iframe
+            class="absolute inset-0 w-full h-full"
+            src="https://player.vimeo.com/video/${id}"
+            frameborder="0"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>`;
+      return new Response(JSON.stringify({ type: "oembed", html }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, max-age=0",
+        },
+      });
     }
   }
 
