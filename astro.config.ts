@@ -1,51 +1,62 @@
-import { defineConfig } from "astro/config";
+import { defineConfig, envField, fontProviders, svgoOptimizer } from "astro/config";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
-import path from "path";
+import config from "./astro-paper.config";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 export default defineConfig({
-  output: "static",
-  outDir: "./dist",
-  site: process.env.SITE || "https://astro-paper-sanity.pages.dev",
-  integrations: [react(), sitemap()],
+  site: config.site.url,
+  integrations: [
+    react(),
+    sitemap({
+      filter: page =>
+        config.features?.showArchives !== false ||
+        !page.endsWith("/archives/"),
+    }),
+  ],
+  // i18n は astro-paper v6 から借用しているが、Sanity Portable Text 自体が
+  // 1 言語想定なので default 1 locale だけ宣言してプレフィックスを抑止する。
+  i18n: {
+    locales: [config.site.lang ?? "en"],
+    defaultLocale: config.site.lang ?? "en",
+    routing: { prefixDefaultLocale: false },
+  },
   vite: {
-    resolve: {
-      alias: {
-        "@": path.resolve("./src"),
-      },
-    },
-    assetsInclude: ["**/*.ttf"],
-    optimizeDeps: {
-      exclude: ["@resvg/resvg-js"],
-    },
+    // tailwindcss() の型は @tailwindcss/vite が同梱する vite の Plugin 型で、
+    // Astro 6 が要求する vite Plugin 型と minor verison ずれでぶつかる。
+    // ランタイム挙動は問題ないので any キャストで吸収する。
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    plugins: [tailwindcss() as any],
     ssr: {
       noExternal: ["@resvg/resvg-js"],
       external: ["@resvg/resvg-js"],
     },
-    plugins: [
-      {
-        name: "ignore-node-files",
-        enforce: "pre",
-        resolveId(source) {
-          if (source.endsWith(".node")) return source;
-          return null;
-        },
-        load(id) {
-          if (id.endsWith(".node")) {
-            return `export default ${JSON.stringify(id)};`; // 文字列として読み込ませる
-          }
-          return null;
-        },
-      },
-    ],
-    css: {
-    //  postcss: "./postcss.config.cjs",
+    optimizeDeps: { exclude: ["@resvg/resvg-js"] },
+  },
+  fonts: [
+    {
+      name: "Google Sans Code",
+      cssVariable: "--font-google-sans-code",
+      provider: fontProviders.google(),
+      fallbacks: ["monospace"],
+      weights: [300, 400, 500, 600, 700],
+      styles: ["normal", "italic"],
+      formats: ["woff", "ttf"],
     },
-    build: {
-      chunkSizeWarningLimit: 1024, // 単位 KB。例: 1MBまで許容
-    }
+  ],
+  env: {
+    schema: {
+      PUBLIC_GOOGLE_SITE_VERIFICATION: envField.string({
+        access: "public",
+        context: "client",
+        optional: true,
+      }),
+    },
+  },
+  experimental: {
+    svgOptimizer: svgoOptimizer(),
   },
 });

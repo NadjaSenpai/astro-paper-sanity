@@ -1,27 +1,20 @@
 ---
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
 import Layout from "@/layouts/Layout.astro";
-import Main from "@/layouts/Main.astro";
-import PortableTextRendererClient from "@/components/PortableTextRendererClient";
-import { cleansePortableText } from "@/lib/sanity/utils/helpers";
-import { getSiteConfig } from "@/lib/getSiteConfig";
-import { getPageBySlug } from "@/lib/sanity/api/page";
-
-const site = await getSiteConfig();
-const page = await getPageBySlug("about");
-if (!page) throw new Error("Aboutページが見つかりませんでした");
-
-// SSG なので prerender を false にせず、完全静的化
+import Header from "@/components/Header.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Main from "@/components/Main.astro";
+import Footer from "@/components/Footer.astro";
+import config from "@/config";
 ---
-<Layout title={`About | ${site.title}`}>
+
+<Layout title={`About | ${config.site.title}`}>
   <Header />
-  <Main pageTitle="About" pageDesc="">
-    <PortableTextRendererClient
-      client:load
-      value={cleansePortableText(page.content)}
-      headingLink={false}
-    />
+
+  <Breadcrumb />
+
+  <Main pageTitle="About" class="app-prose">
+    <p>Add about content via Sanity Studio.</p>
   </Main>
+
   <Footer />
 </Layout>

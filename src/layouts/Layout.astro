@@ -1,128 +1,129 @@
 ---
+import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
-import { getSiteConfig } from "@/lib/getSiteConfig";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
+import { getAssetPath } from "@/utils/withBase";
+import config from "@/config";
 import "@/styles/global.css";
 
-const site = await getSiteConfig();
-
-const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
-
-export interface Props {
+type Props = {
   title?: string;
-  author?: string;
-  profile?: string;
   description?: string;
   ogImage?: string;
   canonicalURL?: string;
-  pubDate?: string | Date;
-  modDate?: string | Date | null;
-  scrollSmooth?: boolean;
-}
+};
+
+const { site } = config;
 
 const {
   title = site.title,
-  author = site.author,
-  profile = site.profile,
   description = site.description,
-  ogImage = site.ogImage ? `/${site.ogImage}` : "/og.png",
-  canonicalURL = new URL(Astro.url.pathname, site.website?? "https://example.com"),
-  pubDate,
-  modDate,
-  scrollSmooth = false,
+  ogImage = resolveDefaultOgImagePath(config),
+  canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
 } = Astro.props;
 
-const parsedPubDate = pubDate ? new Date(pubDate) : null;
-const parsedModDate = modDate ? new Date(modDate) : null;
-
-const socialImageURL = new URL(ogImage, site.website);
-
-const structuredData = {
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  headline: title,
-  image: socialImageURL.toString(),
-  ...(parsedPubDate && { datePublished: parsedPubDate.toISOString() }),
-  ...(parsedModDate && { dateModified: parsedModDate.toISOString() }),
-  author: [
-    {
-      "@type": "Person",
-      name: author,
-      ...(profile && { url: profile }),
-    },
-  ],
-};
+const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
+const rssHref = getRelativeLocaleUrl(
+  Astro.currentLocale ?? config.site.lang,
+  "rss.xml"
+);
 ---
 
 <!doctype html>
-<html lang={site.lang ?? "en"} class={scrollSmooth ? "scroll-smooth" : ""} data-theme="dark">
+<html
+  dir={site.dir ?? "ltr"}
+  lang={Astro.currentLocale ?? site.lang}
+  class="overflow-y-scroll scroll-smooth"
+>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={canonicalURL.toString()} />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={getAssetPath("favicon.svg")} />
+    <link rel="icon" href={getAssetPath("favicon.ico")} />
+    <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
-    <!-- General Meta Tags -->
+    <!-- Font -->
+    <Font
+      cssVariable="--font-google-sans-code"
+      preload={[{ subset: "latin", weight: 400, style: "normal" }]}
+    />
+
+    <!-- Primary meta -->
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
-    <meta name="author" content={author} />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="author" content={site.author} />
+    <link rel="sitemap" href={getAssetPath("sitemap-index.xml")} />
 
-    <link rel="preload" as="font" href="/fonts/Satoshi-Variable.woff2" type="font/woff2" crossorigin />
-
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.title} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonicalURL.toString()} />
-    <meta property="og:image" content={socialImageURL.toString()} />
-    {parsedPubDate && (
-      <meta property="article:published_time" content={parsedPubDate.toISOString()} />
-    )}
-    {parsedModDate && (
-      <meta property="article:modified_time" content={parsedModDate.toISOString()} />
-    )}
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={socialImageURL} />
 
-    <!-- Twitter -->
+    <!-- Twitter / X -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={canonicalURL.toString()} />
+    <meta property="twitter:url" content={canonicalURL} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
-    <meta property="twitter:image" content={socialImageURL.toString()} />
+    <meta property="twitter:image" content={socialImageURL} />
 
-    <!-- JSON-LD Structured Data -->
-    <script
-      type="application/ld+json"
-      is:inline
-      set:html={JSON.stringify(structuredData)}
-    />
-
+    <!-- RSS autodiscovery -->
     <link
       rel="alternate"
       type="application/rss+xml"
       title={site.title}
-      href={new URL("rss.xml", site.website).toString()}
+      href={new URL(rssHref, Astro.site)}
     />
 
-    {googleSiteVerification && (
-      <meta name="google-site-verification" content={googleSiteVerification} />
-    )}
+    <!-- Filled at runtime by theme.ts to match the current background colour -->
+    <meta name="theme-color" content="" />
+
+    <!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) -->
+    <slot name="head" />
+
+    {
+      site.googleVerification && (
+        <meta
+          name="google-site-verification"
+          content={site.googleVerification}
+        />
+      )
+    }
+
+    <!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    -->
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        const theme = stored ?? (prefersDark ? "dark" : "light");
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script>
+
+    <script is:inline src="/scripts/copy-code.js"></script>
 
     <ClientRouter />
-    
-    <script is:inline src="/toggle-theme.js"></script>
-    <script is:inline src="/scripts/copy-code.js"></script>
   </head>
-  <body>
+  <body
+    class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
+  >
     <slot />
+    <script>
+      import "@/scripts/theme";
+    </script>
   </body>
 </html>
-
-<style>
-  html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-  }
-</style>

@@ -1,24 +1,33 @@
 ---
-import { getTags } from "@/lib/sanity";
-import Main from "@/layouts/Main.astro";
+import { getPosts } from "@/lib/sanity";
+import { sanityPostsToV6 } from "@/lib/sanity/adapter";
 import Layout from "@/layouts/Layout.astro";
-import Tag from "@/components/Tag.astro";
 import Header from "@/components/Header.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Main from "@/components/Main.astro";
 import Footer from "@/components/Footer.astro";
-import { getSiteConfig } from "@/lib/getSiteConfig";
+import Tag from "@/components/Tag.astro";
+import { getUniqueTags } from "@/utils/getUniqueTags";
+import { useTranslations } from "@/i18n";
+import config from "@/config";
 
-const tags = await getTags();
-const site = await getSiteConfig();
+const posts = sanityPostsToV6(await getPosts());
+const tags = getUniqueTags(posts);
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
 ---
 
-<Layout title={`Tags | ${site.title}`}>
+<Layout title={`${t.pages.tagsTitle} | ${config.site.title}`}>
   <Header />
-  <Main pageTitle="Tags" pageDesc="All the tags used in posts.">
-    <ul class="flex flex-wrap gap-2">
-      {tags.map(({ slug, title }) => (
-        <Tag tag={slug} tagName={title} size="lg" />
-      ))}
+
+  <Breadcrumb />
+
+  <Main pageTitle={t.pages.tagsTitle} pageDesc={t.pages.tagsDesc}>
+    <ul class="flex flex-wrap gap-6">
+      {tags.map(({ tag, tagName }) => <Tag {tag} {tagName} />)}
     </ul>
   </Main>
+
   <Footer />
 </Layout>

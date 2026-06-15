@@ -1,30 +1,13 @@
 {
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist", "public/pagefind", "studio", "node_modules"],
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    "moduleDetection": "force",
-    "isolatedModules": true,
-    "incremental": true,
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "types": ["node"],
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@sanity/*": ["sanity/*"],
-      "@sanity/clientConfig": ["sanity/clientConfig.ts"],
-      "@types": ["src/types"]
-    },
-  },
-  "include": ["**/*.ts", "**/*.tsx", "env.d.ts"],
-  "exclude": ["node_modules"]
+      "@/*": ["./src/*"],
+      "@/astro-paper.config": ["./astro-paper.config"]
+    }
+  }
 }
