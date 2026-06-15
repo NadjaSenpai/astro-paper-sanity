@@ -251,7 +251,11 @@ export async function onRequestGet(context: {
 
   // ─── Spotify ───
   if (/open\.spotify\.com/.test(rawUrl)) {
-    const m = rawUrl.match(/open\.spotify\.com\/(track|album|playlist)\/(\w+)/);
+    // open.spotify.com/{track|album|playlist|episode|show}/{id} の前に
+    // /intl-ja/ などのロケールプレフィックスが入るケースを許容する。
+    const m = rawUrl.match(
+      /open\.spotify\.com\/(?:intl-[a-z]{2,3}\/)?(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/
+    );
     if (m) {
       const [, kind, id] = m;
       if (/^[A-Za-z0-9]+$/.test(id)) {
