@@ -50,10 +50,15 @@ function validateOutboundUrl(raw: string): URL {
   return parsed;
 }
 
-const DISALLOWED_RESPONSE = new Response(
-  JSON.stringify({ error: true, message: "Disallowed URL" }),
-  { status: 400, headers: { "Content-Type": "application/json" } }
-);
+// Workers runtime forbids constructing Response objects in module top
+// level (it counts as a randomness-bearing operation). Build a fresh
+// Response inside the handler each time instead.
+function disallowedResponse(): Response {
+  return new Response(
+    JSON.stringify({ error: true, message: "Disallowed URL" }),
+    { status: 400, headers: { "Content-Type": "application/json" } }
+  );
+}
 
 // ─── Body size-limited reader ─────────────────────────────────────────────────
 async function readLimited(response: Response, max: number): Promise<string> {
@@ -107,7 +112,7 @@ export async function onRequestGet(context: {
   try {
     parsedRawUrl = validateOutboundUrl(rawUrl);
   } catch {
-    return DISALLOWED_RESPONSE;
+    return disallowedResponse();
   }
 
   // ─── YouTube ───
@@ -148,7 +153,7 @@ export async function onRequestGet(context: {
   // ─── Twitter/X ───
   if (/twitter\.com|x\.com/.test(rawUrl)) {
     if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
-      return DISALLOWED_RESPONSE;
+      return disallowedResponse();
     }
     try {
       const api = `https://publish.twitter.com/oembed?url=${encodeURIComponent(
@@ -206,7 +211,7 @@ export async function onRequestGet(context: {
   // ─── SoundCloud ───
   if (/soundcloud\.com/.test(rawUrl)) {
     if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
-      return DISALLOWED_RESPONSE;
+      return disallowedResponse();
     }
     try {
       const api = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(rawUrl)}`;
