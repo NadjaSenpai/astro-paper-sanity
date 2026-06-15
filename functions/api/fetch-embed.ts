@@ -98,7 +98,6 @@ const ALLOWED_EMBED_HOSTS = [
   "bandcamp.com",
   "music.apple.com",
   "codepen.io",
-  "gist.github.com",
   "figma.com",
   "tiktok.com",
   "instagram.com",
@@ -353,31 +352,6 @@ export async function onRequestGet(context: {
               allow="encrypted-media"
               allowfullscreen
             ></iframe>
-          </div>`;
-        return new Response(JSON.stringify({ type: "oembed", html }), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store, max-age=0",
-          },
-        });
-      }
-    }
-  }
-
-  // ─── GitHub Gist ───
-  // gist.github.com/{user}/{id} ⇒ <script src=".../{id}.js">
-  if (/gist\.github\.com/.test(rawUrl)) {
-    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
-      return disallowedResponse();
-    }
-    const m = rawUrl.match(/gist\.github\.com\/([^/]+)\/([a-f0-9]+)/i);
-    if (m) {
-      const [, user, id] = m;
-      if (/^[A-Za-z0-9_-]+$/.test(user) && /^[a-f0-9]+$/i.test(id)) {
-        const html = `
-          <div class="my-4">
-            <script src="https://gist.github.com/${user}/${id}.js"></script>
           </div>`;
         return new Response(JSON.stringify({ type: "oembed", html }), {
           status: 200,

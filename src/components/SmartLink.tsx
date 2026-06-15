@@ -44,15 +44,41 @@ export default function SmartLink({ url }: Props) {
             json.html && (json.html = json.html.trim());
             setData(json as EmbedData);
 
-            if (
-              json.type === "oembed" &&
-              isTwitter &&
-              !document.querySelector('script[src*="platform.twitter.com/widgets.js"]')
-            ) {
-              const s = document.createElement("script");
-              s.src = "https://platform.twitter.com/widgets.js";
-              s.async = true;
-              document.body.appendChild(s);
+            if (json.type === "oembed" && typeof json.html === "string") {
+              // HTML 内の <script src="..."> は dangerouslySetInnerHTML で
+              // そのまま挿入しても browser が実行しないので、ここで src を
+              // 抽出して document.body に動的 append する。すでに同じ src が
+              // ある場合は append をスキップ。
+              const srcMatches = Array.from(
+                (json.html as string).matchAll(
+                  /<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi
+                )
+              );
+              const loads = srcMatches.map(m => {
+                const src = m[1];
+                if (document.querySelector(`script[src="${src}"]`)) {
+                  return Promise.resolve();
+                }
+                return new Promise<void>(resolve => {
+                  const s = document.createElement("script");
+                  s.src = src;
+                  s.async = true;
+                  s.onload = () => resolve();
+                  s.onerror = () => resolve();
+                  document.body.appendChild(s);
+                });
+              });
+              // Scripts が load されたら provider-specific hydrator を 1 度叩く
+              // (既存 widget script が既に load 済みの 2 回目以降のために必要)
+              Promise.all(loads).then(() => {
+                if (cancelled) return;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const w = window as any;
+                w.twttr?.widgets?.load?.();
+                w.instgrm?.Embeds?.process?.();
+                // TikTok's embed.js auto-detects new .tiktok-embed elements,
+                // so an explicit trigger isn't necessary.
+              });
             }
           } else {
             setError("Unsupported embed type");
