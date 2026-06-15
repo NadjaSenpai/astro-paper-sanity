@@ -61,6 +61,10 @@ function disallowedResponse(): Response {
 }
 
 // ─── Body size-limited reader ─────────────────────────────────────────────────
+// When the upstream response exceeds `max` bytes, stop reading and return
+// what we already have. OGP meta tags live in <head>, which on real product
+// pages (Amazon etc.) typically arrives in the first few hundred KiB even
+// when the full HTML is much larger; aborting outright would lose them.
 async function readLimited(response: Response, max: number): Promise<string> {
   const reader = response.body?.getReader();
   if (!reader) return "";
@@ -71,11 +75,11 @@ async function readLimited(response: Response, max: number): Promise<string> {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
+    result += decoder.decode(value, { stream: true });
     if (total > max) {
       reader.cancel();
-      throw new Error("Response too large");
+      break;
     }
-    result += decoder.decode(value, { stream: true });
   }
   result += decoder.decode();
   return result;
@@ -151,31 +155,27 @@ export async function onRequestGet(context: {
   }
 
   // ─── Twitter/X ───
+  // publish.twitter.com/oembed is now flaky / gated, so we synthesise the
+  // widget bootstrap markup ourselves. Twitter's own widgets.js then
+  // hydrates the blockquote into a full tweet card. Same approach as
+  // YouTube / Vimeo / Spotify: avoid the outbound oEmbed dependency.
   if (/twitter\.com|x\.com/.test(rawUrl)) {
     if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
       return disallowedResponse();
     }
-    try {
-      const api = `https://publish.twitter.com/oembed?url=${encodeURIComponent(
-        rawUrl
-      )}&theme=${theme}`;
-      const res = await fetch(api, { signal: AbortSignal.timeout(5000) });
-      if (res.ok) {
-        const ct = res.headers.get("content-type") ?? "";
-        if (!ct.startsWith("application/json")) throw new Error("Unexpected content-type");
-        const body = await readLimited(res, MAX_BODY);
-        const { html } = JSON.parse(body);
-        return new Response(JSON.stringify({ type: "oembed", html }), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store, max-age=0",
-          },
-        });
-      }
-    } catch {
-      // fallthrough
-    }
+    const safeTheme = theme === "dark" ? "dark" : "light";
+    const html = `
+      <blockquote class="twitter-tweet" data-theme="${safeTheme}">
+        <a href="${rawUrl}">${rawUrl}</a>
+      </blockquote>
+      <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`;
+    return new Response(JSON.stringify({ type: "oembed", html }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   }
 
   // ─── Vimeo ───
