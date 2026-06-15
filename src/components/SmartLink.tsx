@@ -90,9 +90,16 @@ export default function SmartLink({ url }: Props) {
 
   // oEmbed
   if (data.type === "oembed" && data.html) {
-    // Belt-and-suspenders: only inject HTML that is a bare <iframe>...</iframe>.
-    // This guards against unexpected markup from Twitter/SoundCloud pass-throughs.
-    const isSafeHtml = /^\s*<iframe\b[\s\S]*<\/iframe>\s*$/.test(data.html);
+    // Belt-and-suspenders: only inject HTML that either contains an
+    // <iframe> (YouTube / Vimeo / Spotify / SoundCloud wrap div) or that
+    // references the Twitter widgets bootstrap (Twitter / X oEmbed
+    // returns blockquote + widgets.js script). fetch-embed.ts has
+    // already enforced the provider host allowlist, so this gate only
+    // catches obviously broken responses, not adversarial ones.
+    const html = data.html;
+    const isSafeHtml =
+      /<iframe\b/i.test(html) ||
+      /platform\.twitter\.com\/widgets\.js/i.test(html);
     if (!isSafeHtml) {
       return (
         <a href={url} target="_blank" rel="noopener noreferrer" className="underline">
