@@ -7,7 +7,15 @@ import CodeBlock from "@/components/CodeBlock";
 import ImageWithModal from "@/components/ImageWithModal";
 import SmartLink from "@/components/SmartLink";
 import { renderYouTube } from "@/utils/renderYouTube";
+import { slugifyStr } from "@/utils/slugify";
 import type { HighlightedCodeMap } from "@/lib/highlight/highlightCodeBlocks";
+
+function extractText(value: { children?: { text?: string }[] }): string {
+  if (!value || !Array.isArray(value.children)) return "";
+  return value.children
+    .map((c: { text?: string }) => (typeof c.text === "string" ? c.text : ""))
+    .join("");
+}
 
 export function createPortableTextComponents(
   highlightedCode: HighlightedCodeMap = {}
@@ -42,10 +50,10 @@ export function createPortableTextComponents(
         }
         return <p>{children}</p>;
       },
-      h1: (props: PortableTextComponentProps<any>): ReactElement => <h1>{props.children}</h1>,
-      h2: (props: PortableTextComponentProps<any>): ReactElement => <h2>{props.children}</h2>,
-      h3: (props: PortableTextComponentProps<any>): ReactElement => <h3>{props.children}</h3>,
-      h4: (props: PortableTextComponentProps<any>): ReactElement => <h4>{props.children}</h4>,
+      h1: (props: PortableTextComponentProps<any>): ReactElement => <h1 id={slugifyStr(extractText(props.value))}>{props.children}</h1>,
+      h2: (props: PortableTextComponentProps<any>): ReactElement => <h2 id={slugifyStr(extractText(props.value))}>{props.children}</h2>,
+      h3: (props: PortableTextComponentProps<any>): ReactElement => <h3 id={slugifyStr(extractText(props.value))}>{props.children}</h3>,
+      h4: (props: PortableTextComponentProps<any>): ReactElement => <h4 id={slugifyStr(extractText(props.value))}>{props.children}</h4>,
       blockquote: (props: PortableTextComponentProps<any>): ReactElement => (
         <blockquote>{props.children}</blockquote>
       ),

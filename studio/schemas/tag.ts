@@ -21,11 +21,11 @@ export default defineType({
       },
       validation: (Rule) =>
         Rule.required().custom((value: any) => {
-          const regex = /^[a-z0-9\-]+$/;
-          if (!value) return true; // Sanity側で required はチェック済み
-          return regex.test(value)
+          const current = typeof value === "string" ? value : value?.current;
+          if (!current) return true;
+          return /^[\p{L}\p{N}\-]+$/u.test(current)
             ? true
-            : "Slug must only contain lowercase letters, numbers, and dashes.";
+            : "Slug must only contain letters, numbers, and dashes.";
         }),
     }),
   ],

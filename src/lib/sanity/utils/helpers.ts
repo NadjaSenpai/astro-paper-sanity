@@ -1,7 +1,8 @@
-import type { Page, Post } from "@/lib/sanity/api/types";
-import type { PortableTextBlock } from "@portabletext/types";
+import type { Page, Post, CustomPortableTextBlock } from "@/lib/sanity/api/types";
 
-export function cleansePortableText(value: PortableTextBlock[] = []) {
+type PortableTextBlocks = CustomPortableTextBlock[];
+
+export function cleansePortableText(value: PortableTextBlocks = []) {
   return value.filter(block => typeof block._type === "string");
 }
 
