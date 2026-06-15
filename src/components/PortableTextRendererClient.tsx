@@ -5,9 +5,12 @@ import type { ReactElement } from "react";
 import { PortableText } from "@portabletext/react";
 import { createPortableTextComponents } from "./PortableTextComponents";
 import type { HighlightedCodeMap } from "@/lib/highlight/highlightCodeBlocks";
+import type { CustomPortableTextBlock } from "@/lib/sanity/api/types";
+
+type PortableTextBlocks = CustomPortableTextBlock[];
 
 interface Props {
-  value: any[];
+  value: PortableTextBlocks;
   highlightedCode?: HighlightedCodeMap;
 }
 

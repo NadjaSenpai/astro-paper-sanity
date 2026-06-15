@@ -90,6 +90,16 @@ export default function SmartLink({ url }: Props) {
 
   // oEmbed
   if (data.type === "oembed" && data.html) {
+    // Belt-and-suspenders: only inject HTML that is a bare <iframe>...</iframe>.
+    // This guards against unexpected markup from Twitter/SoundCloud pass-throughs.
+    const isSafeHtml = /^\s*<iframe\b[\s\S]*<\/iframe>\s*$/.test(data.html);
+    if (!isSafeHtml) {
+      return (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="underline">
+          {url}
+        </a>
+      );
+    }
     return (
       <figure className="my-4">
         <a href={url} target="_blank" rel="noopener noreferrer" className="underline block mb-2">

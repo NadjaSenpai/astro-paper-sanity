@@ -7,6 +7,7 @@ import { getPostSlug } from "@/utils/getPostPaths";
 import config from "@/config";
 import { getPosts } from "@/lib/sanity";
 import { sanityPostsToV6 } from "@/lib/sanity/adapter";
+import { postFilter } from "@/utils/postFilter";
 
 export async function getStaticPaths() {
   if (!config.features.dynamicOgImage) {
@@ -14,9 +15,7 @@ export async function getStaticPaths() {
   }
 
   const rawPosts = await getPosts();
-  const posts = sanityPostsToV6(rawPosts).filter(
-    ({ data }) => !data.draft && !data.ogImage
-  );
+  const posts = sanityPostsToV6(rawPosts).filter(postFilter).filter(({ data }) => !data.ogImage);
 
   return posts.map(post => ({
     params: { slug: getPostSlug(post.id, post.filePath) },
@@ -146,7 +145,7 @@ export const GET: APIRoute = async ({ props, url }) => {
                                       overflow: "hidden",
                                       fontWeight: "bold",
                                     },
-                                    children: props.data.author,
+                                    children: config.site.author,
                                   },
                                 },
                               ],

@@ -61,6 +61,12 @@ export default defineType({
       ],
     }),
     defineField({ name: "description", type: "text", title: "Description" }),
+    defineField({
+      name: "ogImage",
+      type: "string",
+      title: "OG Image URL (optional)",
+      description: "Override the auto-generated per-post OG image with an explicit URL. Leave empty to fall back to /posts/{slug}/index.png.",
+    }),
     defineField({ name: "pubDate", type: "datetime", title: "Published at", validation: Rule => Rule.required() }),
     defineField({ name: "modDate", type: "datetime", title: "Modified at" }),
     defineField({ name: "featured", type: "boolean", title: "Featured" }),

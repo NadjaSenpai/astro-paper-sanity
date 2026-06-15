@@ -4,7 +4,7 @@ import { normalizePost } from "@/lib/sanity/utils/helpers";
 import { projectId, dataset, apiVersion, useCdn, token } from "@/lib/sanity/client";
 
 export async function getPosts(): Promise<Post[]> {
-  const client = createClient({ projectId, dataset, apiVersion, useCdn, token });
+  const client = createClient({ projectId, dataset, apiVersion, useCdn, token, perspective: "published" });
 
   const query = `*[_type == "post"] | order(pubDate desc){
     title,
@@ -24,7 +24,7 @@ export async function getPosts(): Promise<Post[]> {
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const client = createClient({ projectId, dataset, apiVersion, useCdn, token });
+  const client = createClient({ projectId, dataset, apiVersion, useCdn, token, perspective: "published" });
 
   const query = `*[_type == "post" && slug.current == $slug][0]{
     title,

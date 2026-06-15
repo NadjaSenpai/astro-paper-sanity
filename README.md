@@ -12,14 +12,14 @@ Live sample: <https://astro-paper-sanity.pages.dev>
 ## Features
 
 - Headless CMS integration with Sanity (Portable Text content)
-- Astro 5 + React 19 + Tailwind CSS 4
+- Astro 6 + React 19 + Tailwind CSS 4
 - Dark mode, tag pages, archive, pagination
 - Dynamic OG image generation via satori + resvg-js
 - Static client-side search via Pagefind
+- Syntax highlighting via Shiki
 - RSS feed and social links
-- Syntax highlighting via react-syntax-highlighter / Prism
 - Icons from Tabler Icons
-- Cloudflare Pages deploy config included (also works on Vercel)
+- Deployed on Cloudflare Pages
 
 ## Architecture
 
@@ -29,12 +29,13 @@ Live sample: <https://astro-paper-sanity.pages.dev>
 - Studio is excluded from search engines via `robots.txt` and can be
   password-protected at the hosting layer.
 - Sanity deploy hooks trigger on-demand rebuilds.
+- Two React islands are used for interactive client-side components.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js >= 20
+- Node.js >= 22.12
 - pnpm >= 10 (declared as `packageManager` in `package.json`)
 
 ### 1. Clone and install
@@ -55,8 +56,10 @@ cp env.example .env
 cp env.example studio/.env
 ```
 
-The Astro side reads `SANITY_*` vars; the Studio side reads
-`SANITY_STUDIO_*` vars (Sanity convention).
+Environment variables are split by access scope:
+
+- Server-only (never exposed to the browser): `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_API_TOKEN`
+- Public / client-safe: `PUBLIC_SANITY_PROJECT_ID`, `PUBLIC_SANITY_DATASET`
 
 ### 3. Run locally
 
@@ -80,17 +83,19 @@ cd studio && pnpm dev
 
 ## Deployment
 
-The repository ships with config for **Cloudflare Pages**
-(`wrangler.toml`, `functions/`). Cloudflare's git integration will
-auto-build on each push to `main`; no GitHub Actions workflow is needed
-for deploy.
+This template targets **Cloudflare Pages** exclusively (via `functions/` for
+Cloudflare Pages Functions).
 
-`vercel.json` is also included so the same repo can be deployed to
-Vercel without changes. Pick one and remove the other if you don't need
-both.
+Connect the repository to Cloudflare Pages via the dashboard git integration.
+Cloudflare will auto-build on each push to `main`; no `wrangler.toml` or
+manual deploy step is needed.
+
+Set environment variables in the Cloudflare Pages dashboard under
+**Settings > Environment variables**. Add them to both the **Production** and
+**Preview** scopes so that PR preview deployments also have access.
 
 CI on GitHub (`.github/workflows/ci.yml`) runs `astro check` and ESLint
-on every push and pull request to keep forks honest.
+on every push and pull request.
 
 ## License
 
@@ -106,5 +111,4 @@ The base theme is licensed under MIT by
   [resvg-js](https://github.com/yisibl/resvg-js)
 - Static search: [Pagefind](https://pagefind.app)
 - Icons: [Tabler Icons](https://tabler-icons.io)
-- Syntax highlighting:
-  [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter)
+- Syntax highlighting: [Shiki](https://shiki.style)

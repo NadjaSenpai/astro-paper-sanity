@@ -15,6 +15,11 @@ import type { Post } from "@/lib/sanity/api/types";
 export interface V6PostEntry {
   id: string;
   filePath: string;
+  /**
+   * NOTE: per-post `author` is not modelled in the Sanity Post schema and is
+   * intentionally absent here. Consumers that need an author name should fall
+   * back to `config.site.author`.
+   */
   data: {
     title: string;
     description: string;
