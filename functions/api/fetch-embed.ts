@@ -87,11 +87,27 @@ async function readLimited(response: Response, max: number): Promise<string> {
 
 const MAX_BODY = 1024 * 1024; // 1 MiB
 
-// ─── Provider allowlist for Twitter/SoundCloud oEmbed ────────────────────────
-const TWITTER_SOUNDCLOUD_HOSTS = ["twitter.com", "x.com", "soundcloud.com"];
+// ─── Provider allowlist for branch entry hosts ───────────────────────────────
+// Every branch that calls an upstream oEmbed API or hosts a hand-built
+// iframe whose `src` includes the inbound URL goes through this check first,
+// so we never expose a path where any URL string can reach those providers.
+const ALLOWED_EMBED_HOSTS = [
+  "twitter.com",
+  "x.com",
+  "soundcloud.com",
+  "bandcamp.com",
+  "music.apple.com",
+  "codepen.io",
+  "gist.github.com",
+  "figma.com",
+  "tiktok.com",
+  "instagram.com",
+];
 
 function isAllowedOembedHost(hostname: string): boolean {
-  return TWITTER_SOUNDCLOUD_HOSTS.some(h => hostname === h || hostname.endsWith("." + h));
+  return ALLOWED_EMBED_HOSTS.some(
+    h => hostname === h || hostname.endsWith("." + h)
+  );
 }
 
 export async function onRequestGet(context: {
@@ -260,6 +276,185 @@ export async function onRequestGet(context: {
         });
       }
     }
+  }
+
+  // ─── Bandcamp ───
+  // Public, stable oEmbed API. Same pattern as SoundCloud.
+  if (/bandcamp\.com/.test(rawUrl)) {
+    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
+      return disallowedResponse();
+    }
+    try {
+      const api = `https://bandcamp.com/oembed?url=${encodeURIComponent(rawUrl)}&format=json`;
+      const res = await fetch(api, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const ct = res.headers.get("content-type") ?? "";
+        if (!ct.startsWith("application/json")) throw new Error("Unexpected content-type");
+        const body = await readLimited(res, MAX_BODY);
+        const { html } = JSON.parse(body);
+        return new Response(JSON.stringify({ type: "oembed", html }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store, max-age=0",
+          },
+        });
+      }
+    } catch {
+      // fallthrough
+    }
+  }
+
+  // ─── Apple Music ───
+  // music.apple.com/{country}/album/{slug}/{id} ⇒ embed.music.apple.com/...
+  if (/music\.apple\.com/.test(rawUrl)) {
+    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
+      return disallowedResponse();
+    }
+    const embedSrc = rawUrl.replace(/^https:\/\/music\.apple\.com\//, "https://embed.music.apple.com/");
+    const html = `
+      <div class="my-4 max-w-3xl">
+        <iframe
+          src="${embedSrc}"
+          width="100%"
+          height="450"
+          frameborder="0"
+          allow="autoplay *; encrypted-media *; clipboard-write"
+          sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+        ></iframe>
+      </div>`;
+    return new Response(JSON.stringify({ type: "oembed", html }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
+  }
+
+  // ─── CodePen ───
+  // codepen.io/{user}/(pen|full)/{slug} ⇒ codepen.io/{user}/embed/{slug}
+  if (/codepen\.io/.test(rawUrl)) {
+    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
+      return disallowedResponse();
+    }
+    const m = rawUrl.match(/codepen\.io\/([^/]+)\/(?:pen|full|details)\/([A-Za-z0-9]+)/);
+    if (m) {
+      const [, user, slug] = m;
+      if (/^[A-Za-z0-9_-]+$/.test(user) && /^[A-Za-z0-9]+$/.test(slug)) {
+        const html = `
+          <div class="my-4 max-w-3xl">
+            <iframe
+              src="https://codepen.io/${user}/embed/${slug}?height=400&default-tab=result"
+              width="100%"
+              height="400"
+              loading="lazy"
+              frameborder="0"
+              allow="encrypted-media"
+              allowfullscreen
+            ></iframe>
+          </div>`;
+        return new Response(JSON.stringify({ type: "oembed", html }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store, max-age=0",
+          },
+        });
+      }
+    }
+  }
+
+  // ─── GitHub Gist ───
+  // gist.github.com/{user}/{id} ⇒ <script src=".../{id}.js">
+  if (/gist\.github\.com/.test(rawUrl)) {
+    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
+      return disallowedResponse();
+    }
+    const m = rawUrl.match(/gist\.github\.com\/([^/]+)\/([a-f0-9]+)/i);
+    if (m) {
+      const [, user, id] = m;
+      if (/^[A-Za-z0-9_-]+$/.test(user) && /^[a-f0-9]+$/i.test(id)) {
+        const html = `
+          <div class="my-4">
+            <script src="https://gist.github.com/${user}/${id}.js"></script>
+          </div>`;
+        return new Response(JSON.stringify({ type: "oembed", html }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store, max-age=0",
+          },
+        });
+      }
+    }
+  }
+
+  // ─── Figma ───
+  // Any figma.com URL can be embedded through the official embed endpoint.
+  if (/figma\.com/.test(rawUrl)) {
+    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
+      return disallowedResponse();
+    }
+    const html = `
+      <div class="my-4 max-w-3xl">
+        <iframe
+          src="https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(rawUrl)}"
+          width="100%"
+          height="450"
+          frameborder="0"
+          allowfullscreen
+        ></iframe>
+      </div>`;
+    return new Response(JSON.stringify({ type: "oembed", html }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
+  }
+
+  // ─── TikTok ───
+  // blockquote + widgets.js (TikTok's official client-side hydration).
+  if (/tiktok\.com/.test(rawUrl)) {
+    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
+      return disallowedResponse();
+    }
+    const m = rawUrl.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+    const videoId = m && /^\d+$/.test(m[1]) ? m[1] : "";
+    const html = `
+      <blockquote class="tiktok-embed" cite="${rawUrl}"${videoId ? ` data-video-id="${videoId}"` : ""}>
+        <a href="${rawUrl}">${rawUrl}</a>
+      </blockquote>
+      <script async src="https://www.tiktok.com/embed.js"></script>`;
+    return new Response(JSON.stringify({ type: "oembed", html }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
+  }
+
+  // ─── Instagram ───
+  // blockquote + embed.js (Instagram's official client-side hydration).
+  if (/instagram\.com/.test(rawUrl)) {
+    if (!isAllowedOembedHost(parsedRawUrl.hostname)) {
+      return disallowedResponse();
+    }
+    const html = `
+      <blockquote class="instagram-media" data-instgrm-permalink="${rawUrl}" data-instgrm-version="14">
+        <a href="${rawUrl}">${rawUrl}</a>
+      </blockquote>
+      <script async src="https://www.instagram.com/embed.js"></script>`;
+    return new Response(JSON.stringify({ type: "oembed", html }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   }
 
   // ─── OGP / 多段フォールバック ───

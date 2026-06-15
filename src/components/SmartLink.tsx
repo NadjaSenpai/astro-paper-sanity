@@ -90,16 +90,17 @@ export default function SmartLink({ url }: Props) {
 
   // oEmbed
   if (data.type === "oembed" && data.html) {
-    // Belt-and-suspenders: only inject HTML that either contains an
-    // <iframe> (YouTube / Vimeo / Spotify / SoundCloud wrap div) or that
-    // references the Twitter widgets bootstrap (Twitter / X oEmbed
-    // returns blockquote + widgets.js script). fetch-embed.ts has
-    // already enforced the provider host allowlist, so this gate only
-    // catches obviously broken responses, not adversarial ones.
+    // Belt-and-suspenders: only inject HTML that contains either an
+    // <iframe> (YouTube / Vimeo / Spotify / SoundCloud / Bandcamp /
+    // Apple Music / CodePen / Figma) or an external <script src=> tag
+    // (Twitter, TikTok, Instagram, GitHub Gist — all client-side
+    // hydrators). fetch-embed.ts has already enforced the provider
+    // host allowlist; this gate just catches obviously broken
+    // responses, not adversarial ones.
     const html = data.html;
     const isSafeHtml =
       /<iframe\b/i.test(html) ||
-      /platform\.twitter\.com\/widgets\.js/i.test(html);
+      /<script\b[^>]*\bsrc=/i.test(html);
     if (!isSafeHtml) {
       return (
         <a href={url} target="_blank" rel="noopener noreferrer" className="underline">
@@ -140,7 +141,8 @@ export default function SmartLink({ url }: Props) {
           <img
             src={data.image}
             alt={data.title || url}
-            className="mb-2 w-full object-cover rounded"
+            className="mb-2 w-full max-h-64 object-contain rounded bg-muted/20"
+            loading="lazy"
           />
         )}
         <h3 className="text-lg font-semibold">{data.title}</h3>
